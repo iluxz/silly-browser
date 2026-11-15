@@ -904,6 +904,8 @@ class SillyBrowser:
              width=100, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "➕ new", self.new_script, fill="#e9e3f7", dark="#d5cbec", fg=PURPLE_DARK,
              width=90, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
+        Pill(bottom, "🗑️ delete", self.delete_current, fill="#fde8e8", dark="#f5c6c6", fg=CORAL_DARK,
+             width=110, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
 
         # status bar
         sbar = tk.Frame(self.root, bg=LAVENDER)
@@ -1047,27 +1049,68 @@ class SillyBrowser:
         self.refresh_css_cards()
 
     def new_script(self):
-        if self.tab_var.get() == "styles":
-            name = simpledialog.askstring("new style", "name (without .css):", parent=self.root)
-            if not name:
+        is_css = (self.tab_var.get() == "styles")
+        ext = ".css" if is_css else ".js"
+        title = "new style" if is_css else "new script"
+
+        # stylized dialog (win3.1 inspired)
+        dlg = tk.Toplevel(self.root)
+        dlg.title(title)
+        dlg.geometry("400x200")
+        dlg.configure(bg=CREAM)
+        dlg.resizable(False, False)
+        dlg.transient(self.root)
+        dlg.grab_set()
+
+        # bevel frame
+        frame = tk.Frame(dlg, bg=CREAM, highlightbackground=BEIGE_LO, highlightthickness=3)
+        frame.pack(fill="both", expand=True, padx=8, pady=8)
+
+        tk.Label(frame, text=title, bg=CREAM, fg=INK, font=(H_FONT, 16, "bold")).pack(pady=(12, 4))
+        tk.Label(frame, text="name (without %s):" % ext, bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
+
+        name_var = tk.StringVar()
+        entry = tk.Entry(frame, textvariable=name_var, font=(B_FONT, 12), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE, insertbackground=PURPLE)
+        entry.pack(fill="x", padx=24, pady=(8, 12), ipady=6)
+        entry.focus_set()
+
+        result = {"name": None}
+
+        def on_ok():
+            n = name_var.get().strip()
+            if not n:
                 return
-            name = name.strip().replace(" ", "-") + ".css"
-            path = os.path.join(CSS_FOLDER, name)
-            if os.path.exists(path):
-                messagebox.showinfo("exists", "that style already exists")
-                return
+            result["name"] = n.replace(" ", "-") + ext
+            dlg.destroy()
+
+        def on_cancel():
+            dlg.destroy()
+
+        btn_row = tk.Frame(frame, bg=CREAM)
+        btn_row.pack(pady=(0, 12))
+        tk.Button(btn_row, text="cancel", font=(B_FONT, 10), bg=LAVENDER, fg=PURPLE_DARK, bd=0, padx=16, pady=6,
+                  command=on_cancel).pack(side="left", padx=(0, 8))
+        tk.Button(btn_row, text="create", font=(B_FONT, 10, "bold"), bg=PURPLE, fg="white", bd=0, padx=16, pady=6,
+                  command=on_ok).pack(side="left")
+
+        dlg.bind("<Return>", lambda e: on_ok())
+        dlg.bind("<Escape>", lambda e: on_cancel())
+        self.root.wait_window(dlg)
+
+        name = result["name"]
+        if not name:
+            return
+
+        folder = CSS_FOLDER if is_css else SCRIPTS_FOLDER
+        path = os.path.join(folder, name)
+        if os.path.exists(path):
+            messagebox.showinfo("exists", "that %s already exists" % ("style" if is_css else "script"))
+            return
+        if is_css:
             with open(path, "w", encoding="utf-8") as f:
                 f.write("/* " + name + " */\nbody { }\n")
             self.load_css(name)
         else:
-            name = simpledialog.askstring("new script", "name (without .js):", parent=self.root)
-            if not name:
-                return
-            name = name.strip().replace(" ", "-") + ".js"
-            path = os.path.join(SCRIPTS_FOLDER, name)
-            if os.path.exists(path):
-                messagebox.showinfo("exists", "that script already exists")
-                return
             with open(path, "w", encoding="utf-8") as f:
                 f.write("// " + name + "\nconsole.log('[silly] " + name + " active!');\n")
             self.load_script(name)
@@ -1078,7 +1121,18 @@ class SillyBrowser:
         name = self.editor_name.cget("text")
         is_css = name.endswith(".css")
         folder = CSS_FOLDER if is_css else SCRIPTS_FOLDER
-        if name in ("default.js",):
+        presets = {"default.js", "confetti.js", "cursor-trail.js", "floating-elements.js",
+                   "meme-text.js", "rainbow-mode.js", "screen-shake.js", "highlighter.js",
+                   "ad-remover.js", "text-replacer.js", "element-picker.js",
+                   "brain-liquidation-1.js", "brain-liquidation-2.js", "brain-liquidation-3.js",
+                   "brain-liquidation-4.js", "brain-liquidation-5.js", "brain-liquidation-6.js",
+                   "silly-plus-stars.js", "silly-plus-wobble.js", "silly-plus-spotlight.js",
+                   "silly-plus-gravity.js", "silly-plus-matrix.js",
+                   "dark-mode.css", "font-changer.css", "rainbow-borders.css"}
+        if name in presets:
+            messagebox.showinfo("protected", "%s is a built-in preset and can't be deleted" % name)
+            return
+        if name == "default.js":
             messagebox.showinfo("nope", "can't delete the default script")
             return
         if not messagebox.askyesno("delete", "delete %s?" % name):
