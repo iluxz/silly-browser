@@ -700,7 +700,7 @@ class SillyBrowser:
         self.root.title("the silly browser v1.3")
         self.root.geometry("1080x700")
         self.root.configure(bg=CREAM)
-        self.root.minsize(960, 600)
+        self.root.minsize(700, 500)
         self.config = load_config()
         self.rules = load_rules()
         self.cards = []
@@ -772,7 +772,7 @@ class SillyBrowser:
         main.pack(fill="both", expand=True, padx=14, pady=(6, 10))
 
         # left sidebar
-        sidebar = tk.Frame(main, bg=CREAM, width=300)
+        sidebar = tk.Frame(main, bg=CREAM, width=260)
         sidebar.pack(side="left", fill="y", padx=(0, 12))
         sidebar.pack_propagate(False)
 
@@ -876,9 +876,17 @@ class SillyBrowser:
         self.editor.bind("<Control-s>", lambda e: self.save_script())
         self.editor.bind("<Control-a>", lambda e: (self.editor.tag_add("sel", "1.0", "end"), "break"))
 
-        # bottom bar
-        bottom = tk.Frame(self.root, bg=CREAM)
-        bottom.pack(fill="x", side="bottom", padx=14, pady=(0, 12))
+        # bottom bar (horizontally scrollable)
+        bottom_outer = tk.Frame(self.root, bg=CREAM)
+        bottom_outer.pack(fill="x", side="bottom", padx=14, pady=(0, 12))
+        bottom_canvas = tk.Canvas(bottom_outer, bg=CREAM, highlightthickness=0, bd=0, height=60)
+        bottom_canvas.pack(fill="x")
+        bottom_hbar = tk.Scrollbar(bottom_outer, orient="horizontal", command=bottom_canvas.xview)
+        bottom_hbar.pack(fill="x")
+        bottom_canvas.configure(xscrollcommand=bottom_hbar.set)
+        bottom = tk.Frame(bottom_canvas, bg=CREAM)
+        bottom_canvas.create_window((0, 0), window=bottom, anchor="nw")
+        bottom.bind("<Configure>", lambda e: bottom_canvas.configure(scrollregion=bottom_canvas.bbox("all")))
 
         Pill(bottom, "📋 copy bookmarklet", self.make_it_silly, fill=PURPLE, dark=PURPLE_DARK,
              width=200, height=52, font=(B_FONT, 12, "bold")).pack(side="left")
