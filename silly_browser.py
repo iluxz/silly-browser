@@ -980,6 +980,9 @@ class SillyBrowser:
             name = "default.js"
         self.current = name
         self.config["current_script"] = name
+        # in single mode, selecting a script enables only that one
+        if not self.config.get("multi_mode", True):
+            self.config["enabled_scripts"] = [name]
         save_config(self.config)
         with open(path, "r", encoding="utf-8") as f:
             self.editor.delete("1.0", tk.END)
@@ -989,6 +992,7 @@ class SillyBrowser:
         fill, edge = script_colors(name)
         self.mascot.set_color(fill, edge)
         self.refresh_cards()
+        self.update_status_bar()
 
     def load_css(self, name):
         path = os.path.join(CSS_FOLDER, name)
