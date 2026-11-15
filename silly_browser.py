@@ -34,6 +34,8 @@ CSS_FOLDER = os.path.join(SCRIPT_DIR, "styles")
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 RULES_FILE = os.path.join(SCRIPT_DIR, "site_rules.json")
 PORT = 8742
+CURRENT_VERSION = "1.3.0"
+GITHUB_REPO = "the-silly-team/silly-browser"
 
 os.makedirs(SCRIPTS_FOLDER, exist_ok=True)
 os.makedirs(CSS_FOLDER, exist_ok=True)
@@ -690,7 +692,7 @@ class Pill(tk.Canvas):
 class SillyBrowser:
     def __init__(self, root):
         self.root = root
-        self.root.title("the silly browser v1.2")
+        self.root.title("the silly browser v1.3")
         self.root.geometry("1080x700")
         self.root.configure(bg=CREAM)
         self.root.minsize(960, 600)
@@ -871,6 +873,8 @@ class SillyBrowser:
              width=200, height=52, font=(B_FONT, 12, "bold")).pack(side="left")
         Pill(bottom, "🔄 toggle on/off", self.toggle_enabled_current, fill=LAVENDER, dark="#d5cbec", fg=PURPLE_DARK,
              width=150, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
+        Pill(bottom, "update", self.check_for_updates, fill="#e9e3f7", dark="#d5cbec", fg=PURPLE_DARK,
+             width=100, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "🎲 surprise", self.surprise_me, fill=SUN, dark=SUN_DARK, fg="#5c4400",
              width=130, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "🧪 playground", self.open_playground, fill=MINT, dark=MINT_DARK,
@@ -891,6 +895,9 @@ class SillyBrowser:
         # keyboard shortcuts
         self.root.bind("<Control-n>", lambda e: self.new_script())
         self.root.bind("<Control-f>", lambda e: self.focus_search())
+
+        # auto-check for updates on startup (silent)
+        self.root.after(3000, lambda: self.check_for_updates(silent=True))
 
         # load initial
         self.load_script(self.current)
@@ -1200,7 +1207,68 @@ class SillyBrowser:
             parts.append("%d css" % len(enabled_css))
         if persist:
             parts.append("persistent")
-        self.status.configure(text="enabled: " + ", ".join(parts) + "  ✦  localhost:%d" % PORT)
+        self.status.configure(text="enabled: " + ", ".join(parts) + "  ✦  localhost:%d  ✦  v%s" % (PORT, CURRENT_VERSION))
+
+    def check_for_updates(self, silent=False):
+        import urllib.request, json, re
+        try:
+            url = "https://api.github.com/repos/%s/releases/latest" % GITHUB_REPO
+            req = urllib.request.Request(url, headers={"User-Agent": "silly-browser/%s" % CURRENT_VERSION})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                data = json.loads(r.read().decode("utf-8"))
+            tag = data.get("tag_name", "").lstrip("v")
+            # compare versions
+            def parse(v):
+                return tuple(int(x) for x in re.findall(r"\d+", v)[:3])
+            if parse(tag) > parse(CURRENT_VERSION):
+                # find the exe asset
+                exe_url = None
+                for a in data.get("assets", []):
+                    if a["name"] == "silly-browser.exe":
+                        exe_url = a["browser_download_url"]
+                        break
+                if exe_url:
+                    if messagebox.askyesno("update available",
+                            "a new version (v%s) is available!\n\nupdate now?" % tag):
+                        self._do_update(exe_url, tag)
+                elif not silent:
+                    messagebox.showinfo("update", "new version v%s found but no exe asset" % tag)
+            elif not silent:
+                messagebox.showinfo("up to date", "you're on the latest version (v%s)" % CURRENT_VERSION)
+        except Exception as e:
+            if not silent:
+                messagebox.showwarning("update check failed", str(e))
+
+    def _do_update(self, exe_url, tag):
+        import urllib.request, os, sys, subprocess
+        tmp_dir = os.path.join(os.environ.get("TEMP", "."), "silly_update")
+        os.makedirs(tmp_dir, exist_ok=True)
+        new_exe = os.path.join(tmp_dir, "silly-browser-new.exe")
+        self.status.configure(text="downloading update...")
+        self.root.update()
+        try:
+            urllib.request.urlretrieve(exe_url, new_exe)
+        except Exception as e:
+            messagebox.showerror("download failed", str(e))
+            return
+        # write a batch updater that waits for this process to exit, replaces exe, restarts
+        current_exe = os.path.abspath(sys.argv[0])
+        bat = os.path.join(tmp_dir, "update.bat")
+        with open(bat, "w") as f:
+            f.write("@echo off\n")
+            f.write("echo waiting for silly browser to close...\n")
+            f.write(":wait\n")
+            f.write("tasklist /FI \"IMAGENAME eq silly-browser.exe\" 2>NUL | find /I \"silly-browser.exe\" >NUL\n")
+            f.write("if not errorlevel 1 (timeout /t 1 /nobreak >NUL & goto wait)\n")
+            f.write("echo replacing...\n")
+            f.write('copy /Y "%s" "%s"\n' % (new_exe, current_exe))
+            f.write('echo restarting...\n')
+            f.write('start "" "%s"\n' % current_exe)
+            f.write('del "%s"\n' % bat)
+        # launch updater and exit
+        subprocess.Popen(["cmd", "/c", bat], creationflags=0x00000008)  # DETACHED_PROCESS
+        self.root.destroy()
+        sys.exit(0)
 
     # site rules
     def add_site_rule(self):
