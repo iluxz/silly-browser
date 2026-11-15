@@ -53,6 +53,6 @@ MIT
 <div align="center">
   <p>built with <code>:3</code> and a concerning amount of coffee..... and also a tiny bit of brain liquidation</p>
   <p>
-    <a href="https://github.com/iluxz/EML">github.com/iluxz/EML</a>
+    <a href="https://github.com/the-silly-team">github.com/the-silly-team</a>
   </p>
 </div>
