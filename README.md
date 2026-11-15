@@ -49,3 +49,5 @@ pyinstaller --onefile --windowed --name "silly-browser" --icon silly.ico --add-d
 ## license
 
 MIT
+
+made with :3 and concerning amounts of copy.. and tons of brain liquidation 🥖💜
