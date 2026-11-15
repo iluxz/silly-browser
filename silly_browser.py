@@ -1327,6 +1327,11 @@ class SillyBrowser:
         user_var = tk.StringVar(value=self.config.get("github_user", ""))
         entry = tk.Entry(win, textvariable=user_var, font=(B_FONT, 11), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE)
         entry.pack(fill="x", padx=20, ipady=4)
+        # save username whenever it changes
+        def _save_user(*a):
+            self.config["github_user"] = user_var.get().strip()
+            save_config(self.config)
+        user_var.trace_add("write", _save_user)
 
         # status labels
         star_lbl = tk.Label(win, text="⭐ starred repo: checking...", bg=CREAM, fg=MUTED, font=(B_FONT, 10))
@@ -1417,6 +1422,10 @@ class SillyBrowser:
         key_var = tk.StringVar(value=self.config.get("silly_key", ""))
         key_entry = tk.Entry(win, textvariable=key_var, font=(B_FONT, 11), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE)
         key_entry.pack(fill="x", padx=20, ipady=4)
+        def _save_key(*a):
+            self.config["silly_key"] = key_var.get().strip()
+            save_config(self.config)
+        key_var.trace_add("write", _save_key)
 
         key_result = tk.Label(win, text="", bg=CREAM, fg=INK, font=(B_FONT, 10, "bold"))
         key_result.pack(pady=(4, 0))
