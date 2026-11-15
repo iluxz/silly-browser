@@ -613,6 +613,7 @@ class Card(tk.Frame):
         self.fkind = "js"
         self._build()
         self.bind("<Button-1>", lambda e: self.on_click(self))
+        self.bind("<Button-3>", lambda e: self.on_right_click(self))
 
     def _build(self):
         self.strip = tk.Frame(self, width=6, bg=self.tint)
@@ -867,6 +868,8 @@ class SillyBrowser:
 
         Pill(bottom, "📋 copy bookmarklet", self.make_it_silly, fill=PURPLE, dark=PURPLE_DARK,
              width=200, height=52, font=(B_FONT, 12, "bold")).pack(side="left")
+        Pill(bottom, "🔄 toggle on/off", self.toggle_enabled_current, fill=LAVENDER, dark="#d5cbec", fg=PURPLE_DARK,
+             width=150, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "🎲 surprise", self.surprise_me, fill=SUN, dark=SUN_DARK, fg="#5c4400",
              width=130, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "🧪 playground", self.open_playground, fill=MINT, dark=MINT_DARK,
@@ -959,6 +962,13 @@ class SillyBrowser:
     def on_card_click(self, card):
         if self.tab_var.get() == "scripts":
             self.load_script(card.fname)
+
+    def on_right_click(self, card):
+        # right-click toggles enabled/disabled
+        if card.fkind == "js":
+            self.toggle_script(card.fname)
+        elif card.fkind == "css":
+            self.toggle_css(card.fname)
 
     def on_css_click(self, card):
         self.toggle_css(card.fname)
