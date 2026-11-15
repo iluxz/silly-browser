@@ -77,7 +77,12 @@ SCRIPT_COLORS = {
     "highlighter.js": ("#ffd43b", "#e0a52c"),
     "ad-remover.js": ("#69db7c", "#3fae8d"),
     "text-replacer.js": ("#4dabf7", "#2c8fd6"),
+    "element-picker.js": ("#ffd43b", "#e0a52c"),
     "font-changer.css": ("#f783ac", "#d65f8a"),
+    "brain-liquidation-1.js": ("#ff3d63", "#c92a4a"),
+    "brain-liquidation-2.js": ("#b68cff", "#8a5fd4"),
+    "brain-liquidation-3.js": ("#9d75ed", "#7a52c4"),
+    "brain-liquidation-4.js": ("#ffbd4a", "#d49a2a"),
 }
 
 
@@ -329,6 +334,33 @@ img { filter: brightness(0.85); }
         if not os.path.exists(path):
             with open(path, "w", encoding="utf-8") as f:
                 f.write(code)
+
+
+                f.write(code)
+
+
+    # also seed any scripts bundled inside the exe that are missing locally
+    base = getattr(sys, "_MEIPASS", SCRIPT_DIR)
+    bundled_scripts = os.path.join(base, "scripts")
+    if os.path.isdir(bundled_scripts):
+        for name in os.listdir(bundled_scripts):
+            if name.endswith(".js"):
+                dst = os.path.join(SCRIPTS_FOLDER, name)
+                if not os.path.exists(dst):
+                    try:
+                        shutil.copy2(os.path.join(bundled_scripts, name), dst)
+                    except Exception:
+                        pass
+    bundled_styles = os.path.join(base, "styles")
+    if os.path.isdir(bundled_styles):
+        for name in os.listdir(bundled_styles):
+            if name.endswith(".css"):
+                dst = os.path.join(CSS_FOLDER, name)
+                if not os.path.exists(dst):
+                    try:
+                        shutil.copy2(os.path.join(bundled_styles, name), dst)
+                    except Exception:
+                        pass
 
 
 ensure_defaults()
