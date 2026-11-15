@@ -1528,7 +1528,7 @@ class SillyBrowser:
         fix(self.root)
 
         # update specific widgets that might be missed
-        for attr in ("mascot", "card_canvas", "card_inner", "banner", "plus_badge", "editor", "status", "editor_name", "editor_kind"):
+        for attr in ("mascot", "card_canvas", "card_inner", "banner", "plus_badge", "editor", "status", "editor_name", "editor_kind", "bottom_canvas"):
             try:
                 w = getattr(self, attr, None)
                 if w is not None:
@@ -1540,6 +1540,45 @@ class SillyBrowser:
                         w.configure(bg=bg)
             except Exception:
                 pass
+
+        # fix all scrollbars (including nested ones)
+        def fix_scrollbars(w):
+            try:
+                if w.winfo_class() == "Scrollbar":
+                    w.configure(bg=panel, troughcolor=bg, activebackground=lav)
+            except Exception:
+                pass
+            try:
+                for child in w.winfo_children():
+                    fix_scrollbars(child)
+            except Exception:
+                pass
+        fix_scrollbars(self.root)
+
+        # redraw banner gradient for dark mode
+        try:
+            self.banner.delete("all")
+            for i in range(96):
+                t = i / 95.0
+                if dark:
+                    r = int(26 + (37 - 26) * t)
+                    g = int(21 + (26 - 21) * t)
+                    b = int(48 + (74 - 48) * t)
+                else:
+                    r = int(255 + (232 - 255) * t)
+                    g = int(248 + (222 - 248) * t)
+                    bb = int(238 + (253 - 238) * t)
+                    b = bb
+                self.banner.create_line(0, i, 2000, i, fill="#%02x%02x%02x" % (r, g, b))
+            if self.logo_img is not None:
+                self.banner.create_image(26, 22, anchor="nw", image=self.logo_img)
+                self.banner.create_text(28, 72, anchor="w",
+                    text="v1.3  ✦  js + css injection  ✦  multi-script  ✦  persistent  ✦  site rules  ✦  silly+",
+                    fill=muted, font=(B_FONT, 9))
+            else:
+                self.banner.create_text(26, 34, anchor="w", text="the silly browser v1.3", fill=ink, font=(H_FONT, 26, "bold"))
+        except Exception:
+            pass
 
         # update bottom bar canvas
         try:
