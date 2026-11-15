@@ -13,7 +13,9 @@ make_logo_small.py
 make_setup_bg.py
 setup_bg.bmp
 silly.ico
-# temp
-*.log
-config.json
+# temp/test files
+test_*.py
+chrome_*.py
+v2_debug.log
+test_debug.log
 "
