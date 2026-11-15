@@ -1,29 +1,29 @@
-# the silly browser
+# 🧠 THE SILLY BROWSER 🧠
 
-makes any website a little sillier. visual only, your screen only.
+## MAKES ANY WEBSITE A LITTLE SILLIER. VISUAL ONLY. YOUR SCREEN ONLY. NOBODY ELSE SEES IT. THATS THE POINT.
 
-a little desktop app that runs a local server. you write a javascript snippet,
+a tiny desktop app that runs a local server on `localhost:8742`. you write a javascript snippet,
 click a bookmark, and it gets injected into whatever page you're looking at.
 works in any browser (edge, firefox, chrome, whatever) because it uses a
-bookmarklet, not an extension.
+bookmarklet, not an extension. no chromium needed. no store submissions. no family safety drama.
 
-## how to use
+## HOW TO USE (its not that hard)
 
 1. open the silly browser
 2. pick a script (or write your own in the editor)
 3. hit **copy bookmarklet**
 4. paste it as a bookmark in any browser
 5. go to any website, click the bookmark
-6. your script runs on that page. only on your screen.
+6. your script runs on that page. only on your screen. everyone else sees a normal website. you see chaos.
 
-> **note:** the built-in scripts are visual effects, but the editor accepts arbitrary javascript.
+> **warning:** the built-in scripts are visual effects, but the editor accepts arbitrary javascript.
 > custom scripts have full access to the page's environment (DOM, cookies, etc.) — use responsibly.
 > only run scripts you wrote or trust.
 
 there's a **playground** button that opens a local test page so you can check
 your scripts work before unleashing them on the internet.
 
-## features
+## FEATURES (there are a lot)
 
 - local script server on `localhost:8742`
 - script library with a built-in playground page
@@ -46,20 +46,20 @@ your scripts work before unleashing them on the internet.
 - horizontal scrolling bottom bar
 - custom title bar (DWM styled)
 
-## install
+## INSTALL
 
 grab `silly-browser-setup.exe` from the releases page, run it, done.
 
 or just run `silly-browser.exe` on its own. no install needed.
 
-## build it yourself
+## BUILD IT YOURSELF (if you're into that)
 
 ```sh
 pip install pyinstaller
 pyinstaller --onefile --windowed --name "silly-browser" --icon silly.ico --add-data "scripts;scripts" --add-data "logo_small.png;." --add-data "silly.ico;." --add-data "styles;styles" silly_browser.py
 ```
 
-## license
+## LICENSE
 
 MIT
 
