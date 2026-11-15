@@ -698,7 +698,7 @@ class SillyBrowser:
     def __init__(self, root):
         self.root = root
         self.root.title("the silly browser v1.3")
-        self.root.geometry("1080x700")
+        self.root.geometry("1120x740")
         self.root.configure(bg=CREAM)
         self.root.minsize(700, 500)
         self.config = load_config()
@@ -739,7 +739,7 @@ class SillyBrowser:
 
     def _build(self):
         top = tk.Frame(self.root, bg=CREAM)
-        top.pack(fill="x", side="top")
+        top.pack(fill="x", side="top", pady=(0, 4))
 
         self.logo_img = None
         base = getattr(sys, "_MEIPASS", SCRIPT_DIR)
@@ -751,7 +751,7 @@ class SillyBrowser:
                 except Exception:
                     self.logo_img = None
 
-        banner = tk.Canvas(top, height=96, highlightthickness=0, bd=0, bg=CREAM)
+        banner = tk.Canvas(top, height=104, highlightthickness=0, bd=0, bg=CREAM)
         banner.pack(fill="x")
         for i in range(96):
             t = i / 95.0
@@ -769,16 +769,16 @@ class SillyBrowser:
 
         # main area: left sidebar + right editor
         main = tk.Frame(self.root, bg=CREAM)
-        main.pack(fill="both", expand=True, padx=14, pady=(6, 10))
+        main.pack(fill="both", expand=True, padx=18, pady=(10, 14))
 
         # left sidebar
-        sidebar = tk.Frame(main, bg=CREAM, width=260)
+        sidebar = tk.Frame(main, bg=CREAM, width=270)
         sidebar.pack(side="left", fill="y", padx=(0, 12))
         sidebar.pack_propagate(False)
 
         # mascot + title
         mrow = tk.Frame(sidebar, bg=CREAM)
-        mrow.pack(fill="x", pady=(0, 6))
+        mrow.pack(fill="x", pady=(0, 10))
         self.mascot = Mascot(mrow)
         self.mascot.pack(side="left")
         info = tk.Frame(mrow, bg=CREAM)
@@ -791,7 +791,7 @@ class SillyBrowser:
 
         # search
         search_row = tk.Frame(sidebar, bg=CREAM)
-        search_row.pack(fill="x", pady=(4, 6))
+        search_row.pack(fill="x", pady=(6, 10))
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", lambda *a: self.on_search())
         se = tk.Entry(search_row, textvariable=self.search_var, font=(B_FONT, 10),
@@ -804,7 +804,7 @@ class SillyBrowser:
 
         # tabs: scripts / styles
         tabrow = tk.Frame(sidebar, bg=CREAM)
-        tabrow.pack(fill="x", pady=(0, 4))
+        tabrow.pack(fill="x", pady=(0, 8))
         for label, val in [("📜 scripts", "scripts"), ("🎨 styles", "styles")]:
             b = tk.Radiobutton(tabrow, text=label, variable=self.tab_var, value=val,
                                indicatoron=0, bg=LAVENDER, fg=INK, selectcolor=PURPLE,
@@ -814,7 +814,7 @@ class SillyBrowser:
 
         # scrollable card list
         card_wrap = tk.Frame(sidebar, bg=CREAM)
-        card_wrap.pack(fill="both", expand=True)
+        card_wrap.pack(fill="both", expand=True, pady=(0, 4))
         self.card_canvas = tk.Canvas(card_wrap, bg=CREAM, highlightthickness=0, bd=0)
         self.card_canvas.pack(side="left", fill="both", expand=True)
         csb = tk.Scrollbar(card_wrap, orient="vertical", command=self.card_canvas.yview)
@@ -830,7 +830,7 @@ class SillyBrowser:
 
         # mode toggles
         tog = tk.Frame(sidebar, bg=CREAM)
-        tog.pack(fill="x", pady=(6, 4))
+        tog.pack(fill="x", pady=(10, 6))
         self.multi_var = tk.BooleanVar(value=self.config.get("multi_mode", True))
         self.persist_var = tk.BooleanVar(value=self.config.get("persistent", False))
         tk.Checkbutton(tog, text="stack multiple", variable=self.multi_var, bg=CREAM, fg=INK,
@@ -841,10 +841,10 @@ class SillyBrowser:
                        command=self.on_toggle_persist).pack(anchor="w")
 
         Pill(sidebar, "⭐ silly+", self.show_silly_plus, fill="#ffd700", dark="#e6c200", fg="#5c4400",
-             width=280, height=32, font=(B_FONT, 9, "bold")).pack(fill="x", pady=(6, 4))
+             width=280, height=32, font=(B_FONT, 9, "bold")).pack(fill="x", pady=(10, 6))
 
         Pill(sidebar, "🌐 site rules", self.add_site_rule, fill=LAVENDER, dark="#d5cbec", fg=PURPLE_DARK,
-             width=280, height=32, font=(B_FONT, 9, "bold")).pack(fill="x", pady=(6, 4))
+             width=280, height=32, font=(B_FONT, 9, "bold")).pack(fill="x", pady=(10, 6))
 
         # right side: editor
         right = tk.Frame(main, bg=CREAM)
@@ -852,15 +852,15 @@ class SillyBrowser:
 
         # editor title bar
         etitle = tk.Frame(right, bg=PANEL, highlightbackground="#e7dff7", highlightthickness=2)
-        etitle.pack(fill="x")
-        self.editor_name = tk.Label(etitle, text=self.current, bg=PANEL, fg=INK, font=(B_FONT, 11, "bold"), padx=12, pady=8)
+        etitle.pack(fill="x", pady=(0, 4))
+        self.editor_name = tk.Label(etitle, text=self.current, bg=PANEL, fg=INK, font=(B_FONT, 11, "bold"), padx=16, pady=10)
         self.editor_name.pack(side="left")
         self.editor_kind = tk.Label(etitle, text="js", bg=LAVENDER, fg=PURPLE_DARK, font=(B_FONT, 9, "bold"), padx=8, pady=4)
         self.editor_kind.pack(side="right", padx=8)
 
         # editor
         edit_wrap = tk.Frame(right, bg=PANEL, highlightbackground="#e7dff7", highlightthickness=2)
-        edit_wrap.pack(fill="both", expand=True)
+        edit_wrap.pack(fill="both", expand=True, pady=(0, 4))
         hbar = tk.Scrollbar(edit_wrap, orient="horizontal")
         hbar.pack(side="bottom", fill="x")
         vbar = tk.Scrollbar(edit_wrap, orient="vertical")
@@ -878,7 +878,7 @@ class SillyBrowser:
 
         # bottom bar (horizontally scrollable)
         bottom_outer = tk.Frame(self.root, bg=CREAM)
-        bottom_outer.pack(fill="x", side="bottom", padx=14, pady=(0, 12))
+        bottom_outer.pack(fill="x", side="bottom", padx=18, pady=(0, 16))
         bottom_canvas = tk.Canvas(bottom_outer, bg=CREAM, highlightthickness=0, bd=0, height=60)
         bottom_canvas.pack(fill="x")
         bottom_hbar = tk.Scrollbar(bottom_outer, orient="horizontal", command=bottom_canvas.xview)
@@ -908,7 +908,7 @@ class SillyBrowser:
         # status bar
         sbar = tk.Frame(self.root, bg=LAVENDER)
         sbar.pack(fill="x", side="bottom")
-        self.status = tk.Label(sbar, text="", bg=LAVENDER, fg=INK, font=(B_FONT, 9), anchor="w", padx=12, pady=4)
+        self.status = tk.Label(sbar, text="", bg=LAVENDER, fg=INK, font=(B_FONT, 9), anchor="w", padx=16, pady=6)
         self.status.pack(fill="x")
 
         # keyboard shortcuts
@@ -957,7 +957,7 @@ class SillyBrowser:
             enabled = name in self.config.get("enabled_scripts", [])
             selected = (name == self.current)
             card = Card(self.card_inner, self.on_card_click)
-            card.pack(fill="x", pady=2)
+            card.pack(fill="x", pady=4)
             card.set(name.replace(".js", "").replace("-", " ").replace("_", " "),
                      "js script", tint, selected, enabled=enabled, fname=name, fkind="js")
             self.cards.append(card)
