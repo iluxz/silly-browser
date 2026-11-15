@@ -358,7 +358,7 @@ class Mascot(tk.Canvas):
         self.blink += 0.03
         if self.blink > 4.0:
             self.blink = 0.0
-        self.happy = max(0.0, self.happy - 0.02)
+        self.happy = max(0.35, self.happy - 0.004)  # slow decay, never fully sad
         self.delete("all")
         import math
         bob = math.sin(self.t) * 6
@@ -380,13 +380,16 @@ class Mascot(tk.Canvas):
         self.create_oval(cx - 13, cy - 12, cx - 3, cy - 12 + eye_h, fill=INK, outline="")
         self.create_oval(cx + 3, cy - 12, cx + 13, cy - 12 + eye_h, fill=INK, outline="")
         # mouth
-        if self.happy > 0.3:
-            self.create_arc(cx - 10, cy - 2, cx + 10, cy + 16, start=20, extent=140,
+        if self.happy > 0.7:
+            self.create_arc(cx - 11, cy, cx + 11, cy + 16, start=200, extent=140,
+                            style="arc", outline=INK, width=3)
+        elif self.happy > 0.35:
+            self.create_arc(cx - 10, cy + 2, cx + 10, cy + 14, start=200, extent=140,
                             style="arc", outline=INK, width=3)
         else:
             self.create_line(cx - 8, cy + 10, cx + 8, cy + 10, fill=INK, width=3)
         # little floating hearts when cheering
-        if self.happy > 0.55:
+        if self.happy > 0.7:
             import math as _m
             for i in range(3):
                 ph = self.t * 2 + i * 2.1
