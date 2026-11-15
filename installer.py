@@ -185,43 +185,68 @@ class Installer(tk.Tk):
         threading.Thread(target=self._do_install, daemon=True).start()
 
     def _do_install(self):
+        log_path = os.path.join(os.environ.get("TEMP", "."), "silly_install.log")
+        log = open(log_path, "w")
+        def L(msg):
+            log.write(msg + "\\n"); log.flush()
         try:
+            L("BASE=" + BASE)
+            L("install_dir=" + self.install_dir)
+            L("exists BASE silly-browser.exe: " + str(os.path.exists(os.path.join(BASE, "silly-browser.exe"))))
+            L("exists BASE scripts: " + str(os.path.exists(os.path.join(BASE, "scripts"))))
             os.makedirs(self.install_dir, exist_ok=True)
             files_to_copy = [
                 ("silly-browser.exe", "silly-browser.exe"),
                 ("logo.png", "logo.png"),
                 ("README.md", "README.md"),
             ]
-            # scripts folder
             src_scripts = os.path.join(BASE, "scripts")
             dst_scripts = os.path.join(self.install_dir, "scripts")
             os.makedirs(dst_scripts, exist_ok=True)
 
-            total = len(files_to_copy) + len(os.listdir(src_scripts)) if os.path.isdir(src_scripts) else len(files_to_copy)
+            total = len(files_to_copy)
+            if os.path.isdir(src_scripts):
+                total += len(os.listdir(src_scripts))
+
             done = 0
 
             for src_name, dst_name in files_to_copy:
                 self._set_status(f"Copying {src_name}...")
-                shutil.copy2(os.path.join(BASE, src_name), os.path.join(self.install_dir, dst_name))
+                L("copying " + src_name)
+                src_path = os.path.join(BASE, src_name)
+                if not os.path.exists(src_path):
+                    L("SKIP (not found): " + src_path)
+                    continue
+                shutil.copy2(src_path, os.path.join(self.install_dir, dst_name))
                 done += 1
                 self._set_progress(done / total * 100)
 
             if os.path.isdir(src_scripts):
                 for name in os.listdir(src_scripts):
                     self._set_status(f"Copying scripts/{name}...")
+                    L("copying scripts/" + name)
                     shutil.copy2(os.path.join(src_scripts, name), os.path.join(dst_scripts, name))
                     done += 1
                     self._set_progress(done / total * 100)
 
             self._set_status("Creating shortcuts...")
+            L("creating shortcuts")
             self._create_shortcuts()
+            L("registering uninstaller")
             self._register_uninstaller()
 
             self._set_progress(100)
             self._set_status("Done!")
+            L("DONE")
+            log.close()
             self.after(400, self._show_done)
         except Exception as e:
-            self.after(0, lambda: messagebox.showerror("Install failed", str(e)))
+            import traceback
+            tb = traceback.format_exc()
+            L("ERROR: " + str(e))
+            L(tb)
+            log.close()
+            self.after(0, lambda: messagebox.showerror("Install failed", str(e) + "\\n\\nSee " + log_path))
             self.after(0, self.destroy)
 
     def _set_status(self, text):

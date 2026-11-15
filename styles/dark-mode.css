@@ -1,0 +1,4 @@
+/* silly browser - dark mode */
+body { background: #1a1a2e !important; color: #e0e0e0 !important; }
+a { color: #7ec8e3 !important; }
+img { filter: brightness(0.85); }

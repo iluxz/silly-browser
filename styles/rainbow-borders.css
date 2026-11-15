@@ -1,0 +1,2 @@
+/* silly browser - rainbow borders */
+* { border: 2px solid; border-image: linear-gradient(45deg, #ff6b6b, #ffa94d, #ffd43b, #69db7c, #4dabf7, #b197fc) 1 !important; }
