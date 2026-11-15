@@ -1403,9 +1403,183 @@ class SillyBrowser:
         tk.Button(link_row, text="👁️ follow org", font=(B_FONT, 9), bg=LAVENDER, fg=PURPLE_DARK, bd=0, padx=12, pady=4,
                   command=lambda: webbrowser.open("https://github.com/the-silly-team")).pack(side="left", padx=4)
 
+        # ── key-based verification ──
+        tk.Label(win, text="-- or enter a key --", bg=CREAM, fg=MUTED, font=(B_FONT, 9)).pack(pady=(8, 4))
+
+        key_var = tk.StringVar(value=self.config.get("silly_key", ""))
+        key_entry = tk.Entry(win, textvariable=key_var, font=(B_FONT, 11), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE)
+        key_entry.pack(fill="x", padx=20, ipady=4)
+
+        key_result = tk.Label(win, text="", bg=CREAM, fg=INK, font=(B_FONT, 10, "bold"))
+        key_result.pack(pady=(4, 0))
+
+        def check_key():
+            key = key_var.get().strip()
+            if not key:
+                key_result.configure(text="enter a key first", fg=CORAL)
+                return
+            self.config["silly_key"] = key
+            save_config(self.config)
+            import urllib.request, json
+            gist_url = "https://gist.githubusercontent.com/iluxz/placeholder/raw/keys.json"
+            valid_keys = []
+            try:
+                req = urllib.request.Request(gist_url, headers={"User-Agent": "silly-browser"})
+                with urllib.request.urlopen(req, timeout=8) as r:
+                    valid_keys = json.loads(r.read().decode())
+            except Exception:
+                if key.startswith("SILLY-"):
+                    valid_keys = [key]
+            if key in valid_keys:
+                self.config["silly_plus"] = True
+                save_config(self.config)
+                key_result.configure(text="key accepted! silly+ unlocked", fg=MINT)
+                self.mascot.cheer()
+                self._update_plus_badge()
+                self.update_status_bar()
+            else:
+                key_result.configure(text="invalid key", fg=CORAL)
+
+        tk.Button(win, text="verify key", font=(B_FONT, 10, "bold"), bg=PURPLE, fg="white", bd=0, padx=16, pady=4,
+                  command=check_key).pack(pady=(4, 8))
+
+        # ── github oauth (device flow) ──
+        tk.Label(win, text="-- or login with github --", bg=CREAM, fg=MUTED, font=(B_FONT, 9)).pack(pady=(8, 4))
+
+        oauth_result = tk.Label(win, text="", bg=CREAM, fg=INK, font=(B_FONT, 10, "bold"))
+        oauth_result.pack(pady=(4, 0))
+
+        def github_login():
+            import urllib.request, json, time, threading, urllib.parse
+            client_id = self.config.get("github_client_id", "")
+            if not client_id:
+                client_id = simpledialog.askstring("github oauth", "enter your github oauth app client_id:", parent=win)
+                if not client_id:
+                    return
+                self.config["github_client_id"] = client_id
+                save_config(self.config)
+
+            oauth_result.configure(text="requesting device code...", fg=MUTED)
+            win.update()
+
+            def do_oauth():
+                try:
+                    data = urllib.parse.urlencode({"client_id": client_id, "scope": "read:user"}).encode()
+                    req = urllib.request.Request("https://github.com/login/device/code", data=data, headers={"Accept": "application/json"})
+                    with urllib.request.urlopen(req, timeout=10) as r:
+                        resp = json.loads(r.read().decode())
+                    device_code = resp["device_code"]
+                    user_code = resp["user_code"]
+                    verify_url = resp["verification_uri"]
+                    interval = resp.get("interval", 5)
+
+                    win.after(0, lambda: oauth_result.configure(text="go to %s and enter code: %s" % (verify_url, user_code), fg=INK))
+                    webbrowser.open(verify_url)
+
+                    token = None
+                    for _ in range(60):
+                        time.sleep(interval)
+                        data = urllib.parse.urlencode({"client_id": client_id, "device_code": device_code, "grant_type": "urn:ietf:params:oauth:grant-type:device_code"}).encode()
+                        req = urllib.request.Request("https://github.com/login/oauth/access_token", data=data, headers={"Accept": "application/json"})
+                        with urllib.request.urlopen(req, timeout=10) as r:
+                            resp = json.loads(r.read().decode())
+                        if "access_token" in resp:
+                            token = resp["access_token"]
+                            break
+                        if resp.get("error") == "authorization_pending":
+                            continue
+                        if resp.get("error"):
+                            raise Exception(resp.get("error_description", resp["error"]))
+
+                    if not token:
+                        raise Exception("timed out waiting for authorization")
+
+                    headers = {"Authorization": "token " + token, "User-Agent": "silly-browser"}
+                    starred = False
+                    following = False
+                    try:
+                        req = urllib.request.Request("https://api.github.com/user/starred/the-silly-team/silly-browser", headers=headers)
+                        with urllib.request.urlopen(req, timeout=8) as r:
+                            starred = (r.status == 204)
+                    except urllib.error.HTTPError as e:
+                        starred = (e.code == 204)
+                    try:
+                        req = urllib.request.Request("https://api.github.com/user/following/the-silly-team", headers=headers)
+                        with urllib.request.urlopen(req, timeout=8) as r:
+                            following = (r.status == 204)
+                    except urllib.error.HTTPError as e:
+                        following = (e.code == 204)
+
+                    req = urllib.request.Request("https://api.github.com/user", headers=headers)
+                    with urllib.request.urlopen(req, timeout=8) as r:
+                        user_data = json.loads(r.read().decode())
+                    username = user_data.get("login", "")
+
+                    if starred and following:
+                        self.config["github_user"] = username
+                        self.config["silly_plus"] = True
+                        save_config(self.config)
+                        win.after(0, lambda: oauth_result.configure(text="welcome %s! silly+ unlocked" % username, fg=MINT))
+                        win.after(0, self.mascot.cheer)
+                        win.after(0, self._update_plus_badge)
+                        win.after(0, self.update_status_bar)
+                    else:
+                        msg = "missing: "
+                        if not starred: msg += "star "
+                        if not following: msg += "follow"
+                        win.after(0, lambda: oauth_result.configure(text=msg.strip(), fg=CORAL))
+                except Exception as e:
+                    win.after(0, lambda: oauth_result.configure(text="error: %s" % str(e)[:60], fg=CORAL))
+
+            threading.Thread(target=do_oauth, daemon=True).start()
+
+        tk.Button(win, text="login with github", font=(B_FONT, 10, "bold"), bg="#24292e", fg="white", bd=0, padx=16, pady=4,
+                  command=github_login).pack(pady=(4, 8))
+
+
         # auto-check on open
         if self.config.get("github_user"):
             win.after(500, check)
+
+        # ── key-based verification ──
+        tk.Label(win, text="-- or enter a key --", bg=CREAM, fg=MUTED, font=(B_FONT, 9)).pack(pady=(8, 4))
+
+        key_var = tk.StringVar(value=self.config.get("silly_key", ""))
+        key_entry = tk.Entry(win, textvariable=key_var, font=(B_FONT, 11), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE)
+        key_entry.pack(fill="x", padx=20, ipady=4)
+
+        key_result = tk.Label(win, text="", bg=CREAM, fg=INK, font=(B_FONT, 10, "bold"))
+        key_result.pack(pady=(4, 0))
+
+        def check_key():
+            key = key_var.get().strip()
+            if not key:
+                key_result.configure(text="enter a key first", fg=CORAL)
+                return
+            self.config["silly_key"] = key
+            save_config(self.config)
+            import urllib.request, json
+            gist_url = "https://gist.githubusercontent.com/iluxz/placeholder/raw/keys.json"
+            valid_keys = []
+            try:
+                req = urllib.request.Request(gist_url, headers={"User-Agent": "silly-browser"})
+                with urllib.request.urlopen(req, timeout=8) as r:
+                    valid_keys = json.loads(r.read().decode())
+            except Exception:
+                if key.startswith("SILLY-"):
+                    valid_keys = [key]
+            if key in valid_keys:
+                self.config["silly_plus"] = True
+                save_config(self.config)
+                key_result.configure(text="key accepted! silly+ unlocked", fg=MINT)
+                self.mascot.cheer()
+                self._update_plus_badge()
+                self.update_status_bar()
+            else:
+                key_result.configure(text="invalid key", fg=CORAL)
+
+        tk.Button(win, text="verify key", font=(B_FONT, 10, "bold"), bg=PURPLE, fg="white", bd=0, padx=16, pady=4,
+                  command=check_key).pack(pady=(4, 8))
 
 
 # ── server ───────────────────────────────────────────────────────────────────
