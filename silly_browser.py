@@ -1,9 +1,9 @@
 """
-the silly browser v1.2 - the advanced update
+the silly browser v1.3 - the supporter update
 a desktop app that injects js + css into any website via a bookmarklet.
 visual only, your screen only. no chromium, no extensions, no store submissions.
 
-v1.2 features:
+v1.3 features:
   - multi-script stacking (run several at once)
   - css injection alongside js
   - site-specific auto-run rules
@@ -762,10 +762,10 @@ class SillyBrowser:
         if self.logo_img is not None:
             banner.create_image(26, 22, anchor="nw", image=self.logo_img)
             banner.create_text(28, 72, anchor="w",
-                               text="v1.2 advanced  ✦  js + css injection  ✦  multi-script  ✦  persistent  ✦  site rules",
+                               text="v1.3  ✦  js + css injection  ✦  multi-script  ✦  persistent  ✦  site rules  ✦  silly+",
                                fill=MUTED, font=(B_FONT, 9))
         else:
-            banner.create_text(26, 34, anchor="w", text="the silly browser v1.2", fill=INK, font=(H_FONT, 26, "bold"))
+            banner.create_text(26, 34, anchor="w", text="the silly browser v1.3", fill=INK, font=(H_FONT, 26, "bold"))
 
         # main area: left sidebar + right editor
         main = tk.Frame(self.root, bg=CREAM)
