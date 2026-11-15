@@ -762,8 +762,8 @@ class SillyBrowser:
         bottom = tk.Frame(self.root, bg=CREAM)
         bottom.pack(fill="x", side="bottom", padx=14, pady=(0, 12))
 
-        Pill(bottom, "✨ make it silly", self.make_it_silly, fill=PURPLE, dark=PURPLE_DARK,
-             width=180, height=52, font=(B_FONT, 12, "bold")).pack(side="left")
+        Pill(bottom, "📋 copy bookmarklet", self.make_it_silly, fill=PURPLE, dark=PURPLE_DARK,
+             width=200, height=52, font=(B_FONT, 12, "bold")).pack(side="left")
         Pill(bottom, "🎲 surprise", self.surprise_me, fill=SUN, dark=SUN_DARK, fg="#5c4400",
              width=130, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "🧪 playground", self.open_playground, fill=MINT, dark=MINT_DARK,
@@ -1020,6 +1020,7 @@ class SillyBrowser:
         if bm:
             self.root.clipboard_clear()
             self.root.clipboard_append(bm)
+            self.root.update()  # ensure clipboard is flushed
             self.mascot.cheer()
             self.status.configure(text="bookmarklet copied! paste it as a bookmark  ✦")
         else:
