@@ -724,6 +724,8 @@ class SillyBrowser:
         self.refresh_cards()
         self.refresh_css_cards()
         self.update_status_bar()
+        if self.config.get("dark_mode"):
+            self._apply_dark_mode()
 
     def set_window_icon(self):
         base = getattr(sys, "_MEIPASS", SCRIPT_DIR)
@@ -1479,25 +1481,58 @@ class SillyBrowser:
         self._apply_dark_mode()
 
     def _apply_dark_mode(self):
-        if self.config.get("dark_mode"):
-            # dark theme for app UI
-            dark_bg = "#1a1530"
-            dark_panel = "#252040"
-            dark_ink = "#e0ddf5"
-            self.root.configure(bg=dark_bg)
-            # update all frames (best effort)
-            for w in self.root.winfo_children():
-                try:
-                    w.configure(bg=dark_bg)
-                except Exception:
-                    pass
+        dark = self.config.get("dark_mode", False)
+        if dark:
+            self.DARK_BG = "#1a1530"
+            self.DARK_PANEL = "#252040"
+            self.DARK_INK = "#e0ddf5"
+            self.DARK_MUTED = "#9a93b8"
+            self.DARK_LAVENDER = "#3a3060"
         else:
-            self.root.configure(bg=CREAM)
-            for w in self.root.winfo_children():
-                try:
-                    w.configure(bg=CREAM)
-                except Exception:
-                    pass
+            self.DARK_BG = CREAM
+            self.DARK_PANEL = PANEL
+            self.DARK_INK = INK
+            self.DARK_MUTED = MUTED
+            self.DARK_LAVENDER = LAVENDER
+
+        bg = self.DARK_BG
+        panel = self.DARK_PANEL
+        ink = self.DARK_INK
+        muted = self.DARK_MUTED
+        lav = self.DARK_LAVENDER
+
+        self.root.configure(bg=bg)
+
+        def update_widget(w):
+            try:
+                cls = w.winfo_class()
+                if cls in ("Frame", "Labelframe", "Canvas"):
+                    w.configure(bg=bg)
+                elif cls == "Label":
+                    # keep special colored labels
+                    cur = w.cget("bg")
+                    if cur in (CREAM, PANEL, LAVENDER, "#fff8ee", "#ffffff", "#e8defd"):
+                        w.configure(bg=bg, fg=ink)
+                elif cls == "Entry" or cls == "Text":
+                    w.configure(bg=panel, fg=ink, insertbackground=ink)
+                elif cls == "Button":
+                    pass  # buttons keep their colors
+                elif cls == "Checkbutton" or cls == "Radiobutton":
+                    w.configure(bg=bg, fg=ink, activebackground=bg)
+            except Exception:
+                pass
+            for child in w.winfo_children():
+                update_widget(child)
+
+        update_widget(self.root)
+
+        # update scrollbars
+        for w in self.root.winfo_children():
+            try:
+                if w.winfo_class() == "Scrollbar":
+                    w.configure(bg=panel)
+            except Exception:
+                pass
 
     def add_site_rule(self):
         domain = simpledialog.askstring("site rule", "domain (e.g. example.com):", parent=self.root)
