@@ -1356,9 +1356,9 @@ class SillyBrowser:
     def open_settings(self):
         win = tk.Toplevel(self.root)
         win.title("settings")
-        win.geometry("460x520")
+        win.geometry("560x720")
         win.configure(bg=CREAM)
-        win.resizable(False, False)
+        win.resizable(True, True)
         win.transient(self.root)
         win.grab_set()
 
@@ -1516,13 +1516,14 @@ class SillyBrowser:
         # create a toplevel window for silly+ verification
         win = tk.Toplevel(self.root)
         win.title("silly+ supporter")
-        win.geometry("420x380")
+        win.geometry("560x720")
         win.configure(bg=CREAM)
-        win.resizable(False, False)
+        win.resizable(True, True)
         win.transient(self.root)
         win.grab_set()
+        content = win
 
-        tk.Label(win, text="⭐ silly+ supporter", bg=CREAM, fg=INK, font=(H_FONT, 18, "bold")).pack(pady=(16, 4))
+        tk.Label(content, text="⭐ silly+ supporter", bg=CREAM, fg=INK, font=(H_FONT, 18, "bold")).pack(pady=(16, 4))
         tk.Label(win, text="support the silly team on github to unlock silly+", bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
 
         # username input
