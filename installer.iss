@@ -45,6 +45,8 @@ var
   BgImage: TBitmapImage;
 begin
   WizardForm.Color := clBlack;
+  WizardForm.InnerPage.Color := clBlack;
+  WizardForm.Bevel.Visible := False;
   ExtractTemporaryFile('setup_bg.bmp');
   BgImage := TBitmapImage.Create(WizardForm);
   BgImage.Parent := WizardForm;
