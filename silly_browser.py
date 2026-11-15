@@ -756,6 +756,7 @@ class SillyBrowser:
         vbar.configure(command=self.editor.yview)
         self.editor.pack(fill="both", expand=True)
         self.editor.bind("<Control-s>", lambda e: self.save_script())
+        self.editor.bind("<Control-a>", lambda e: (self.editor.tag_add("sel", "1.0", "end"), "break"))
 
         # bottom bar
         bottom = tk.Frame(self.root, bg=CREAM)
