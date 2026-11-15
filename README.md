@@ -50,4 +50,4 @@ pyinstaller --onefile --windowed --name "silly-browser" --icon silly.ico --add-d
 
 MIT
 
-made with :3 and concerning amounts of copy.. and tons of brain liquidation 🥖💜
+made with :3 and concerning amounts of coffee.. and tons of brain liquidation 🥖💜
