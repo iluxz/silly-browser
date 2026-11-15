@@ -50,4 +50,9 @@ pyinstaller --onefile --windowed --name "silly-browser" --icon silly.ico --add-d
 
 MIT
 
-made with :3 and concerning amounts of coffee.. and tons of brain liquidation 🥖💜
+<div align="center">
+  <p>built with <code>:3</code> and a concerning amount of coffee..... and also a tiny bit of brain liquidation</p>
+  <p>
+    <a href="https://github.com/iluxz/EML">github.com/iluxz/EML</a>
+  </p>
+</div>
