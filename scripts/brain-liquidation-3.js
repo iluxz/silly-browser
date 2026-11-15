@@ -1,219 +1,245 @@
 (() => {
-  window.stopBrainLiquidationTres?.();
+  if (window.brainLiquidationTres) return;
 
-  const S = {
-    nodes: [],
+  const S = window.brainLiquidationTres = {
     timers: [],
-    running: true,
-    revenue: 0,
-    braincells: 50,
-    acquisitions: 0,
-    debt: 0
+    nodes: [],
+    originalTitle: document.title,
+    revenue: 4200000000,
+    braincells: 0,
+    running: true
   };
 
-  const add = (el) => {
-    document.body.appendChild(el);
-    S.nodes.push(el);
-    return el;
-  };
+  const random = a => a[Math.floor(Math.random() * a.length)];
+
+  const companies = [
+    "NOBRO TECHNOLOGIES",
+    "POTATO COMPUTING",
+    "SILLY SYSTEMS",
+    "NEURON DESTRUCTION LLC",
+    "THE BREAD FOUNDATION",
+    "ROOF GATOR INDUSTRIES",
+    "WINDOWS 95 HOLDINGS",
+    "LIZARD CAPITAL"
+  ];
 
   const announcements = [
-    "nobro technologies has acquired a suspicious rock.",
-    "potato computing has announced potato 2.",
-    "the bread foundation has lost its entire bread supply.",
-    "windows 95 holdings has declared bankruptcy and restarted.",
-    "lizard capital has invested in a ceiling fan.",
-    "spoon industries has acquired 400 spoons.",
-    "roof gator industries has entered the market.",
-    "the ceo has requested another braincell.",
-    "shareholders have begun communicating in morse code.",
-    "brain liquidation inc. has acquired the moon. probably."
+    "BRAIN LIQUIDATION ACQUIRES THE MOON",
+    "NOBRO TECHNOLOGIES HAS DECLARED WAR ON CSS",
+    "POTATO COMPUTING STOCK UP 9000%",
+    "THE BREAD FOUNDATION REPORTS RECORD CRUMBS",
+    "CEO HAS FORGOTTEN WHAT A COMPANY IS",
+    "NEW SUBSIDIARY: SPOON INDUSTRIES",
+    "INTEL REQUESTS A POTATO",
+    "NVIDIA HAS BEEN OUTBID BY A SANDWICH",
+    "THE BREAD INDEX IS UNSTABLE",
+    "SHAREHOLDERS ARE CONFUSED",
+    "THE HALF-BRAINCELL HAS APPROVED THE BUDGET"
   ];
 
-  const ceoMessages = [
-    "i have reviewed the numbers. there are numbers.",
-    "we are experiencing unprecedented spoon growth.",
-    "the economy is a social construct.",
-    "please stop feeding the server potatoes.",
-    "i am pleased to announce that i found a braincell.",
-    "our financial department is a calculator.",
-    "the board meeting has been postponed due to lizard activity."
+  const emojis = [
+    "💀","📈","💸","🍞","🥔","🦎","🧠",
+    "🏢","📉","🗿","🚨","🧾","🪑","💼"
   ];
 
-  const panel = add(document.createElement("div"));
-  panel.innerHTML = `
-    <div style="font-size:21px;font-weight:900">
-      🧠 brain liquidation inc.
-    </div>
-    <div style="opacity:.65;font-size:11px;margin:4px 0 12px">
-      corporate operations terminal · version tres
-    </div>
-    <div id="bl3-revenue">revenue: $0</div>
-    <div id="bl3-brain">braincells: 50</div>
-    <div id="bl3-debt">corporate debt: $0</div>
-    <div id="bl3-acquisitions">acquisitions: 0</div>
-    <hr style="border-color:#ffffff33">
-    <div id="bl3-status">status: operational-ish</div>
-    <div style="margin-top:12px;font-size:10px;opacity:.6">
-      stock: BRAIN · exchange: basement
-    </div>
-  `;
-
-  Object.assign(panel.style, {
-    position: "fixed",
-    top: "15px",
-    right: "15px",
-    width: "290px",
-    padding: "18px",
-    background: "#171522",
-    color: "#e8ddff",
-    border: "2px solid #9d75ed",
-    borderRadius: "14px",
-    font: "13px monospace",
-    lineHeight: "1.7",
-    zIndex: "2147483647",
-    boxShadow: "0 8px 35px #0009"
-  });
-
-  const ticker = add(document.createElement("div"));
-  ticker.textContent =
-    " BRAIN ▲ +900%  |  NOBRO ▲ +12  |  POTATO COMPUTING ▲ 404  |  WINDOWS 95 ▼ NOT RESPONDING  | ";
-
-  Object.assign(ticker.style, {
-    position: "fixed",
-    bottom: "0",
-    left: "0",
-    width: "100%",
-    padding: "12px 0",
-    background: "#241634",
-    color: "#d9bcff",
-    font: "bold 13px monospace",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    zIndex: "2147483647",
-    borderTop: "2px solid #9d75ed"
-  });
-
-  const tickerText = document.createElement("span");
-  tickerText.textContent = ticker.textContent.repeat(3);
-  ticker.appendChild(tickerText);
-
-  let tickerPosition = 0;
-
-  S.timers.push(setInterval(() => {
-    tickerPosition -= 2;
-    if (tickerPosition < -tickerText.offsetWidth / 3) {
-      tickerPosition = 0;
-    }
-    tickerText.style.display = "inline-block";
-    tickerText.style.transform = `translateX(${tickerPosition}px)`;
-  }, 30));
-
-  function popup(message, color = "#fff0b8") {
-    const el = document.createElement("div");
-    el.textContent = message;
-
-    Object.assign(el.style, {
-      position: "fixed",
-      left: Math.random() * 65 + 5 + "vw",
-      top: Math.random() * 65 + 10 + "vh",
-      maxWidth: "270px",
-      padding: "13px 16px",
-      background: color,
-      color: "#302438",
-      border: "2px solid #9d75ed",
-      borderRadius: "10px",
-      font: "bold 13px monospace",
-      boxShadow: "0 5px 22px #0006",
-      zIndex: "2147483646"
-    });
-
-    add(el);
-    S.timers.push(setTimeout(() => el.remove(), 5500));
-  }
-
-  function update() {
-    panel.querySelector("#bl3-revenue").textContent =
-      "revenue: $" + Math.floor(S.revenue).toLocaleString();
-
-    panel.querySelector("#bl3-brain").textContent =
-      "braincells: " + S.braincells.toFixed(1);
-
-    panel.querySelector("#bl3-debt").textContent =
-      "corporate debt: $" + Math.floor(S.debt).toLocaleString();
-
-    panel.querySelector("#bl3-acquisitions").textContent =
-      "acquisitions: " + S.acquisitions;
-
-    panel.querySelector("#bl3-status").textContent =
-      S.braincells < 10 ? "status: braincell emergency" :
-      S.debt > S.revenue ? "status: financially questionable" :
-      S.revenue > 100000 ? "status: suspiciously successful" :
-      "status: operational-ish";
-  }
-
-  S.timers.push(setInterval(() => {
-    S.revenue += Math.random() * 2500;
-    S.debt += Math.random() * 700;
-    S.braincells = Math.max(0, S.braincells - Math.random() * 1.5);
-    update();
-  }, 1000));
-
-  S.timers.push(setInterval(() => {
-    S.acquisitions++;
-    popup(
-      "📈 ACQUISITION #" + S.acquisitions + ": " +
-      announcements[Math.floor(Math.random() * announcements.length)],
-      "#dfffdc"
-    );
-  }, 8000));
-
-  S.timers.push(setInterval(() => {
-    popup(
-      "👔 CEO UPDATE: " +
-      ceoMessages[Math.floor(Math.random() * ceoMessages.length)],
-      "#e9dcff"
-    );
-  }, 11000));
-
-  S.timers.push(setInterval(() => {
-    const el = document.createElement("div");
-    const items = ["🧠", "💵", "🥔", "🍞", "🦎", "📈", "🥄"];
-
-    el.textContent = items[Math.floor(Math.random() * items.length)];
-
-    Object.assign(el.style, {
-      position: "fixed",
-      left: Math.random() * 95 + "vw",
-      top: "105vh",
-      fontSize: "28px",
-      pointerEvents: "none",
-      zIndex: "2147483645",
-      transition: "transform 8s linear, opacity 8s linear"
-    });
-
-    add(el);
-
-    requestAnimationFrame(() => {
-      el.style.transform = "translateY(-120vh) rotate(540deg)";
-      el.style.opacity = "0";
-    });
-
-    S.timers.push(setTimeout(() => el.remove(), 8500));
-  }, 900));
-
-  window.brainLiquidationTres = S;
-
-  window.stopBrainLiquidationTres = () => {
-    S.running = false;
-    S.timers.forEach(clearInterval);
-    S.timers.forEach(clearTimeout);
-    S.nodes.forEach(el => el.remove());
-    delete window.brainLiquidationTres;
-    delete window.stopBrainLiquidationTres;
-    console.log("[brain liquidation] tres shut down.");
+  const add = (tag, css, content) => {
+    const e = document.createElement(tag);
+    e.style.cssText = css;
+    e.textContent = content;
+    document.body.appendChild(e);
+    S.nodes.push(e);
+    return e;
   };
 
-  update();
-  console.log("[brain liquidation] tres is operational.");
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes blSpin {
+      to { transform:rotate(360deg); }
+    }
+    @keyframes blBounce {
+      0%,100% { transform:translateY(0); }
+      50% { transform:translateY(-35px); }
+    }
+    @keyframes blPulse {
+      0%,100% { scale:1; }
+      50% { scale:1.08; }
+    }
+    @keyframes blTicker {
+      from { transform:translateX(100vw); }
+      to { transform:translateX(-100%); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const later = (fn, ms) => {
+    const id = setTimeout(fn, ms);
+    S.timers.push({id, repeat:false});
+  };
+
+  const repeat = (fn, ms) => {
+    const id = setInterval(fn, ms);
+    S.timers.push({id, repeat:true});
+  };
+
+  const remove = e => {
+    e.remove();
+    S.nodes = S.nodes.filter(n => n !== e);
+  };
+
+  // CORPORATE STOCK TICKER
+  const ticker = add("div", `
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:35px;
+    overflow:hidden;
+    background:#080808;
+    color:#00ff41;
+    border-bottom:2px solid #00ff41;
+    z-index:2147483647;
+    font:bold 14px Consolas;
+    pointer-events:none;
+  `, "");
+
+  const tickerText = document.createElement("div");
+  tickerText.textContent =
+    " BRAIN LIQUIDATION INC.  |  BRAIN: 📈 999999%  | " +
+    "BREAD INDEX: RISING  |  POTATO COMPUTING: ACQUIRED THE SUN  | ";
+  tickerText.style.cssText =
+    "white-space:nowrap;padding:9px;animation:blTicker 18s linear infinite";
+  ticker.appendChild(tickerText);
+
+  // THE FINANCIAL DASHBOARD
+  const dashboard = add("div", `
+    position:fixed;
+    right:12px;
+    bottom:12px;
+    width:245px;
+    background:#080808;
+    color:#00ff41;
+    border:2px solid #00ff41;
+    padding:13px;
+    font:12px Consolas;
+    line-height:1.7;
+    z-index:2147483647;
+    pointer-events:none;
+    box-shadow:0 0 20px #00ff4166;
+    white-space:pre-line;
+  `, "BRAIN LIQUIDATION INC.\nINITIALIZING...");
+
+  // FLOATING CORPORATE ASSETS
+  function asset() {
+    const e = add("div", `
+      position:fixed;
+      left:${Math.random()*95}vw;
+      top:${Math.random()*85}vh;
+      font-size:${20+Math.random()*45}px;
+      z-index:2147483646;
+      pointer-events:none;
+      animation:blBounce ${0.5+Math.random()*1.5}s infinite;
+    `, random(emojis));
+
+    later(() => remove(e), 6500);
+  }
+
+  // ACQUISITION NOTICES
+  function acquisition() {
+    const e = add("div", `
+      position:fixed;
+      left:${Math.random()*55}vw;
+      top:${Math.random()*70}vh;
+      background:#101010;
+      color:#00ff41;
+      border:2px solid #00ff41;
+      padding:13px;
+      max-width:300px;
+      font:bold 13px Consolas;
+      z-index:2147483647;
+      pointer-events:none;
+      box-shadow:0 0 15px #00ff4166;
+      animation:blPulse .5s infinite;
+    `, "🏢 CORPORATE ANNOUNCEMENT\n" + random(announcements));
+
+    later(() => remove(e), 4000);
+  }
+
+  // THE CEO SPEAKS
+  function ceo() {
+    const e = add("div", `
+      position:fixed;
+      left:50%;
+      top:45%;
+      transform:translate(-50%,-50%);
+      background:#111;
+      color:#ffff00;
+      border:3px double #ffff00;
+      padding:20px;
+      font:bold 19px Consolas;
+      text-align:center;
+      z-index:2147483647;
+      pointer-events:none;
+      max-width:80vw;
+    `, "👔 CEO UPDATE:\n" + random([
+      "i forgot the quarterly report",
+      "buy more bread",
+      "what is a stock",
+      "we are now a potato company",
+      "approved. no idea what it is.",
+      "i have discovered a new number"
+    ]));
+
+    later(() => remove(e), 3000);
+  }
+
+  // CORPORATE DIAGNOSTICS
+  repeat(() => {
+    S.revenue += Math.floor(Math.random() * 99999999);
+    S.braincells -= Math.floor(Math.random() * 3);
+
+    dashboard.textContent =
+      "BRAIN LIQUIDATION INC.\n" +
+      "========================\n" +
+      "NASDAQ: BRAIN\n" +
+      "REVENUE: $" + S.revenue.toLocaleString() + "\n" +
+      "BRAIN CELLS: " + S.braincells + "\n" +
+      "CEO: HALF A BRAINCELL\n" +
+      "STOCK: 📈 YES\n" +
+      "BREAD INDEX: " + random(["RISING","MISSING","CRUNCHY","BANKRUPT"]) + "\n" +
+      "SUBSIDIARIES: " + companies.length + "\n" +
+      "CORPORATE STABILITY: NONE";
+  }, 500);
+
+  repeat(asset, 250);
+  repeat(acquisition, 2200);
+  repeat(ceo, 750);
+
+  repeat(() => {
+    document.title = random([
+      "BRAIN LIQUIDATION INC.",
+      "📈 BRAIN: BUY",
+      "NOBRO TECHNOLOGIES",
+      "THE BREAD INDEX",
+      "CEO HAS LEFT",
+      "CORPORATE GOOFYNESS"
+    ]);
+  }, 1500);
+
+  // CLEANUP
+  window.stopBrainLiquidationTres = () => {
+    S.timers.forEach(t =>
+      t.repeat ? clearInterval(t.id) : clearTimeout(t.id)
+    );
+
+    S.nodes.forEach(n => n.remove());
+    style.remove();
+    document.title = S.originalTitle;
+
+    delete window.brainLiquidationTres;
+    delete window.stopBrainLiquidationTres;
+
+    console.log("BRAIN LIQUIDATION TRES: COMPANY DISSOLVED.");
+  };
+
+  console.log("BRAIN LIQUIDATION TRES: HOSTILE TAKEOVER COMPLETE.");
 })();

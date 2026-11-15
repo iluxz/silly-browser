@@ -1,106 +1,180 @@
 (() => {
-  window.stopSillyMeltdown?.();
+  if (window.sillyApocalypse) return;
 
-  const S = {
-    nodes: [],
-    timers: []
+  const state = window.sillyApocalypse = {
+    running: true,
+    timers: [],
+    elements: [],
+    originalTitle: document.title
   };
 
-  const add = (el) => {
+  const $ = (tag, css, text = "") => {
+    const el = document.createElement(tag);
+    el.style.cssText = css;
+    el.textContent = text;
     document.body.appendChild(el);
-    S.nodes.push(el);
+    state.elements.push(el);
     return el;
   };
 
-  const messages = [
-    "the internet is melting",
-    "error: too much silly detected",
-    "your browser has become sentient",
-    "please remain calm. the pixels are escaping.",
-    "system notification: everything is fine.",
-    "the website has been promoted to ceo.",
-    "loading more internet...",
-    "404: common sense not found"
+  const emojis = [
+    "💀","🗿","🍞","🦎","🚨","🧠","🧌",
+    "🐸","🧀","🛸","🧦","🥔","⚠️","🦆"
   ];
 
-  const banner = add(document.createElement("div"));
-  banner.textContent = "⚠ THE INTERNET IS MELTING ⚠";
+  const messages = [
+    "THE SILLY HAS BREACHED CONTAINMENT",
+    "NOBRO.exe HAS STOPPED THINKING",
+    "YOUR WEBSITE IS NOW PROPERTY OF BREAD",
+    "CRITICAL GOOBER OVERLOAD",
+    "THE COUNCIL HAS REJECTED YOUR CSS",
+    "PLEASE INSERT 7 POTATOES",
+    "WINDOWS HAS LEFT THE DIMENSION",
+    "WHY IS THERE A LIZARD IN MY RAM",
+    "SILLY LEVELS: UNREASONABLE",
+    "THIS IS NOT A DRILL. THIS IS A SPOON."
+  ];
 
-  Object.assign(banner.style, {
-    position: "fixed",
-    top: "0",
-    left: "0",
-    width: "100%",
-    padding: "15px",
-    textAlign: "center",
-    background: "#ff3d63",
-    color: "white",
-    font: "bold 20px monospace",
-    zIndex: "2147483647",
-    boxShadow: "0 5px 20px #0005"
-  });
+  const random = arr =>
+    arr[Math.floor(Math.random() * arr.length)];
 
-  S.timers.push(setInterval(() => {
-    const el = document.createElement("div");
-    el.textContent = messages[Math.floor(Math.random() * messages.length)];
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes sillySpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes sillyBounce {
+      0%,100% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-45px) rotate(180deg); }
+    }
+    @keyframes sillyRainbow {
+      to { filter: hue-rotate(360deg); }
+    }
+    @keyframes sillyPulse {
+      0%,100% { scale: 1; }
+      50% { scale: 1.15; }
+    }
+    .silly-chaos {
+      position: fixed;
+      pointer-events: none;
+      z-index: 2147483646;
+      font-family: Consolas, monospace;
+      font-weight: 900;
+    }
+  `;
+  document.head.appendChild(style);
 
-    Object.assign(el.style, {
-      position: "fixed",
-      left: Math.random() * 75 + 5 + "vw",
-      top: Math.random() * 75 + 10 + "vh",
-      padding: "12px",
-      background: ["#fff0a8", "#d9c4ff", "#b9f4ff", "#ffc9dc"][
-        Math.floor(Math.random() * 4)
-      ],
-      color: "#292033",
-      border: "2px solid #292033",
-      borderRadius: "8px",
-      font: "bold 13px monospace",
-      zIndex: "2147483646",
-      boxShadow: "4px 4px 0 #0004"
-    });
+  // THE PAGE HAS LOST ITS COLORS
+  document.documentElement.style.animation =
+    "sillyRainbow 4s linear infinite";
 
-    add(el);
-    S.timers.push(setTimeout(() => el.remove(), 4000));
-  }, 1200));
+  // FLOATING CREATURE POPULATION
+  const spawn = () => {
+    const el = $("div", `
+      position:fixed;
+      left:${Math.random() * 95}vw;
+      top:${Math.random() * 90}vh;
+      font-size:${20 + Math.random() * 55}px;
+      animation:sillyBounce ${0.5 + Math.random() * 2}s infinite;
+      z-index:2147483646;
+      pointer-events:none;
+    `, random(emojis));
 
-  const emojis = ["💀", "🧠", "🗿", "🌐", "⚠️", "📦", "🥔"];
-
-  S.timers.push(setInterval(() => {
-    const el = document.createElement("div");
-    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-
-    Object.assign(el.style, {
-      position: "fixed",
-      left: Math.random() * 95 + "vw",
-      top: Math.random() * 95 + "vh",
-      fontSize: "32px",
-      pointerEvents: "none",
-      zIndex: "2147483645",
-      transform: `rotate(${Math.random() * 360}deg)`
-    });
-
-    add(el);
-    S.timers.push(setTimeout(() => el.remove(), 3000));
-  }, 500));
-
-  S.timers.push(setInterval(() => {
-    banner.style.background =
-      ["#ff3d63", "#8d55e8", "#167c80", "#d68a22"][
-        Math.floor(Math.random() * 4)
-      ];
-  }, 700));
-
-  window.sillyMeltdown = S;
-
-  window.stopSillyMeltdown = () => {
-    S.timers.forEach(clearInterval);
-    S.timers.forEach(clearTimeout);
-    S.nodes.forEach(el => el.remove());
-    delete window.sillyMeltdown;
-    delete window.stopSillyMeltdown;
-    console.log("[silly meltdown] internet restored.");
+    state.timers.push(setTimeout(() => {
+      el.remove();
+      state.elements = state.elements.filter(x => x !== el);
+    }, 10000));
   };
 
-  console.log("[silly meltdown] initiated.");
+  // UNAUTHORIZED ANNOUNCEMENTS
+  const announce = () => {
+    const el = $("div", `
+      position:fixed;
+      top:${Math.random() * 75}vh;
+      left:${Math.random() * 65}vw;
+      background:#111;
+      color:#00ff41;
+      border:3px solid #00ff41;
+      padding:14px;
+      font: bold 16px Consolas,monospace;
+      box-shadow:0 0 25px #00ff41;
+      z-index:2147483647;
+      animation:sillyPulse .3s infinite;
+      max-width:300px;
+    `, random(messages));
+
+    state.timers.push(setTimeout(() => {
+      el.remove();
+      state.elements = state.elements.filter(x => x !== el);
+    }, 3500));
+  };
+
+  // THE SILLY METER
+  const meter = $("div", `
+    position:fixed;
+    bottom:15px;
+    left:15px;
+    padding:12px;
+    background:#090909;
+    color:#00ff41;
+    border:2px solid #00ff41;
+    font: bold 13px Consolas,monospace;
+    z-index:2147483647;
+    pointer-events:none;
+    box-shadow:0 0 20px #00ff4166;
+  `, "SILLY LEVEL: 0%");
+
+  let silly = 0;
+
+  const meterTimer = setInterval(() => {
+    silly += Math.floor(Math.random() * 999);
+    meter.textContent =
+      `SILLY LEVEL: ${silly.toLocaleString()}%\n` +
+      `BRAIN CELLS: ${Math.max(0, 3 - Math.floor(silly / 10000))}\n` +
+      `REALITY: UNSTABLE`;
+  }, 400);
+
+  state.timers.push(meterTimer);
+
+  // CHAOS PRODUCTION
+  const spawnTimer = setInterval(spawn, 250);
+  const announceTimer = setInterval(announce, 1800);
+
+  state.timers.push(spawnTimer, announceTimer);
+
+  // THE TITLE IS NO LONGER YOURS
+  let titleIndex = 0;
+  const titleTimer = setInterval(() => {
+    document.title = random([
+      "💀 SILLY BROWSER 💀",
+      "NOBRO",
+      "THE INTERNET IS MELTING",
+      "BREAD DETECTED",
+      "HELP",
+      "SILLY.exe"
+    ]);
+  }, 1200);
+
+  state.timers.push(titleTimer);
+
+  // EMERGENCY SHUTDOWN
+  window.stopSillyApocalypse = () => {
+    state.running = false;
+    state.timers.forEach(clearInterval);
+    state.timers.forEach(clearTimeout);
+    state.elements.forEach(el => el.remove());
+
+    style.remove();
+    meter.remove();
+
+    document.documentElement.style.animation = "";
+    document.title = state.originalTitle;
+
+    delete window.sillyApocalypse;
+    delete window.stopSillyApocalypse;
+
+    console.log("SILLY APOCALYPSE TERMINATED.");
+  };
+
+  console.log("WARNING: SILLY LEVELS EXCEEDING LIMITS.");
 })();
