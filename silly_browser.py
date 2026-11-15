@@ -83,6 +83,7 @@ SCRIPT_COLORS = {
     "brain-liquidation-2.js": ("#b68cff", "#8a5fd4"),
     "brain-liquidation-3.js": ("#9d75ed", "#7a52c4"),
     "brain-liquidation-4.js": ("#ffbd4a", "#d49a2a"),
+    "brain-liquidation-5.js": ("#e9a84e", "#b8802a"),
 }
 
 
