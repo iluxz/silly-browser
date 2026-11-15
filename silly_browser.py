@@ -911,6 +911,8 @@ class SillyBrowser:
              width=110, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "⚙️ settings", self.open_settings, fill="#e9e3f7", dark="#d5cbec", fg=PURPLE_DARK,
              width=120, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
+        Pill(bottom, "dark", self._quick_dark_toggle, fill="#2f2a45", dark="#1a1530", fg="white",
+             width=90, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
 
         # status bar
         sbar = tk.Frame(self.root, bg=LAVENDER)
@@ -1488,37 +1490,81 @@ class SillyBrowser:
             self.DARK_INK = "#e0ddf5"
             self.DARK_MUTED = "#9a93b8"
             self.DARK_LAVENDER = "#3a3060"
+            self.DARK_INPUT = "#2a2550"
         else:
             self.DARK_BG = CREAM
             self.DARK_PANEL = PANEL
             self.DARK_INK = INK
             self.DARK_MUTED = MUTED
             self.DARK_LAVENDER = LAVENDER
+            self.DARK_INPUT = "#fffdf8"
 
         bg = self.DARK_BG
         panel = self.DARK_PANEL
         ink = self.DARK_INK
         muted = self.DARK_MUTED
         lav = self.DARK_LAVENDER
+        inp = self.DARK_INPUT
 
         self.root.configure(bg=bg)
+
+        # color mapping: light -> dark
+        color_map = {
+            CREAM: bg,
+            PANEL: panel,
+            LAVENDER: lav,
+            "#fff8ee": bg,
+            "#ffffff": panel,
+            "#e8defd": lav,
+            "#fffdf8": inp,
+            "#f4f0fa": panel,
+        }
 
         def update_widget(w):
             try:
                 cls = w.winfo_class()
-                if cls in ("Frame", "Labelframe", "Canvas"):
-                    w.configure(bg=bg)
-                elif cls == "Label":
-                    # keep special colored labels
+                if cls in ("Frame", "Labelframe"):
                     cur = w.cget("bg")
-                    if cur in (CREAM, PANEL, LAVENDER, "#fff8ee", "#ffffff", "#e8defd"):
-                        w.configure(bg=bg, fg=ink)
-                elif cls == "Entry" or cls == "Text":
-                    w.configure(bg=panel, fg=ink, insertbackground=ink)
-                elif cls == "Button":
-                    pass  # buttons keep their colors
+                    if cur in color_map:
+                        w.configure(bg=color_map[cur])
+                    else:
+                        w.configure(bg=bg)
+                elif cls == "Canvas":
+                    cur = w.cget("bg")
+                    if cur in color_map:
+                        w.configure(bg=color_map[cur])
+                    else:
+                        w.configure(bg=bg)
+                    # redraw canvas content if it has a _draw method
+                    if hasattr(w, "_draw") and callable(getattr(w, "_draw", None)):
+                        try:
+                            w._draw(False)
+                        except Exception:
+                            pass
+                elif cls == "Label":
+                    cur_bg = w.cget("bg")
+                    cur_fg = w.cget("fg")
+                    new_bg = color_map.get(cur_bg, bg)
+                    # update foreground for text labels
+                    if cur_fg in (INK, "#2f2a45", MUTED, "#9a93b8"):
+                        new_fg = ink if cur_fg in (INK, "#2f2a45") else muted
+                    else:
+                        new_fg = cur_fg
+                    w.configure(bg=new_bg, fg=new_fg)
+                elif cls == "Entry":
+                    w.configure(bg=inp, fg=ink, insertbackground=ink,
+                                highlightbackground=lav, highlightcolor=PURPLE)
+                elif cls == "Text":
+                    w.configure(bg=inp, fg=ink, insertbackground=ink,
+                                selectbackground=lav, selectforeground=ink)
                 elif cls == "Checkbutton" or cls == "Radiobutton":
-                    w.configure(bg=bg, fg=ink, activebackground=bg)
+                    cur = w.cget("bg")
+                    new_bg = color_map.get(cur, bg)
+                    w.configure(bg=new_bg, fg=ink, activebackground=new_bg, selectcolor=new_bg)
+                elif cls == "Scrollbar":
+                    w.configure(bg=panel, troughcolor=bg)
+                elif cls == "Button":
+                    pass
             except Exception:
                 pass
             for child in w.winfo_children():
@@ -1526,13 +1572,18 @@ class SillyBrowser:
 
         update_widget(self.root)
 
-        # update scrollbars
-        for w in self.root.winfo_children():
-            try:
-                if w.winfo_class() == "Scrollbar":
-                    w.configure(bg=panel)
-            except Exception:
-                pass
+
+    def _quick_dark_toggle(self):
+        self.config["dark_mode"] = not self.config.get("dark_mode", False)
+        save_config(self.config)
+        self._apply_dark_mode()
+        self.status.configure(text="dark mode: %s  ✦" % ("on" if self.config["dark_mode"] else "off"))
+        self.root.after(2400, lambda: self.status.configure(text=""))
+        # update mascot colors if dark
+        if dark:
+            self.mascot.configure(bg=bg)
+        else:
+            self.mascot.configure(bg=CREAM)
 
     def add_site_rule(self):
         domain = simpledialog.askstring("site rule", "domain (e.g. example.com):", parent=self.root)
