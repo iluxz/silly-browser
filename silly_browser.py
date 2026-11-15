@@ -92,6 +92,7 @@ SCRIPT_COLORS = {
     "silly-plus-spotlight.js": ("#2f2a45", "#1a1530"),
     "silly-plus-gravity.js": ("#69db7c", "#3fae8d"),
     "silly-plus-matrix.js": ("#00ff41", "#00cc33"),
+    "tic-tac-toe.js": ("#ff8fb1", "#e46b92"),
 }
 
 
