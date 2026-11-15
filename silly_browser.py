@@ -1096,31 +1096,20 @@ class SillyBrowser:
         ext = ".css" if is_css else ".js"
         title = "new style" if is_css else "new script"
 
-        # stylized dialog (win3.1 inspired)
         dlg = tk.Toplevel(self.root)
         dlg.title(title)
-        dlg.geometry("420x260")
+        dlg.geometry("400x200")
         dlg.configure(bg=CREAM)
-        dlg.resizable(False, False)
         dlg.transient(self.root)
-        dlg.grab_set()
         dlg.lift()
         dlg.focus_force()
 
-        # bevel frame
-        frame = tk.Frame(dlg, bg=CREAM, highlightbackground=BEIGE_LO, highlightthickness=3, relief="raised", bd=2)
-        frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # inner content
-        inner = tk.Frame(frame, bg=CREAM)
-        inner.pack(fill="both", expand=True, padx=12, pady=12)
-
-        tk.Label(inner, text=title, bg=CREAM, fg=INK, font=(H_FONT, 16, "bold")).pack(pady=(8, 4))
-        tk.Label(inner, text="name (without %s):" % ext, bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
+        tk.Label(dlg, text=title, bg=CREAM, fg=INK, font=(H_FONT, 16, "bold")).pack(pady=(20, 8))
+        tk.Label(dlg, text="name (without %s):" % ext, bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
 
         name_var = tk.StringVar()
-        entry = tk.Entry(inner, textvariable=name_var, font=(B_FONT, 12), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE, insertbackground=PURPLE)
-        entry.pack(fill="x", padx=12, pady=(8, 12), ipady=6)
+        entry = tk.Entry(dlg, textvariable=name_var, font=(B_FONT, 12), bg=PANEL, fg=INK, bd=2, relief="solid", insertbackground=PURPLE)
+        entry.pack(fill="x", padx=30, pady=(8, 12), ipady=6)
         entry.focus_set()
 
         result = {"name": None}
@@ -1135,8 +1124,8 @@ class SillyBrowser:
         def on_cancel():
             dlg.destroy()
 
-        btn_row = tk.Frame(inner, bg=CREAM)
-        btn_row.pack(pady=(0, 12))
+        btn_row = tk.Frame(dlg, bg=CREAM)
+        btn_row.pack(pady=(0, 16))
         tk.Button(btn_row, text="cancel", font=(B_FONT, 10), bg=LAVENDER, fg=PURPLE_DARK, bd=0, padx=16, pady=6,
                   command=on_cancel).pack(side="left", padx=(0, 8))
         tk.Button(btn_row, text="create", font=(B_FONT, 10, "bold"), bg=PURPLE, fg="white", bd=0, padx=16, pady=6,
@@ -1144,6 +1133,7 @@ class SillyBrowser:
 
         dlg.bind("<Return>", lambda e: on_ok())
         dlg.bind("<Escape>", lambda e: on_cancel())
+        dlg.grab_set()
         self.root.wait_window(dlg)
 
         name = result["name"]
