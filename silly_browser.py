@@ -1491,7 +1491,6 @@ class SillyBrowser:
             muted = "#9a93b8"
             lav = "#3a3060"
             inp = "#2a2550"
-            cream = "#1a1530"
         else:
             bg = CREAM
             panel = PANEL
@@ -1499,7 +1498,6 @@ class SillyBrowser:
             muted = MUTED
             lav = LAVENDER
             inp = "#fffdf8"
-            cream = CREAM
 
         self.DARK_BG = bg
         self.DARK_PANEL = panel
@@ -1508,79 +1506,58 @@ class SillyBrowser:
         self.DARK_LAVENDER = lav
         self.DARK_INPUT = inp
 
-        self.root.configure(bg=bg)
+        # light colors that should become dark
+        light_bgs = {CREAM, PANEL, LAVENDER, "#fff8ee", "#ffffff", "#e8defd", "#fffdf8", "#f4f0fa", "#fde8e8", "#e9e3f7"}
+        light_texts = {INK, "#2f2a45", MUTED, "#9a93b8"}
 
-        # update main frames
-        for w in self.root.winfo_children():
+        def fix(w):
             try:
                 cls = w.winfo_class()
-                if cls in ("Frame", "Canvas", "Labelframe"):
-                    w.configure(bg=bg)
+                if cls in ("Frame", "Labelframe", "TFrame", "TLabelFrame"):
+                    cur = w.cget("bg")
+                    if cur in light_bgs or cur == "":
+                        w.configure(bg=bg)
+                elif cls == "Canvas":
+                    cur = w.cget("bg")
+                    if cur in light_bgs or cur == "":
+                        w.configure(bg=bg)
                 elif cls == "Label":
-                    w.configure(bg=bg, fg=ink)
+                    cur_bg = w.cget("bg")
+                    cur_fg = w.cget("fg")
+                    new_bg = bg if cur_bg in light_bgs else cur_bg
+                    if cur_fg in light_texts:
+                        new_fg = ink if cur_fg in (INK, "#2f2a45") else muted
+                    else:
+                        new_fg = cur_fg
+                    w.configure(bg=new_bg, fg=new_fg)
+                elif cls in ("Entry",):
+                    w.configure(bg=inp, fg=ink, insertbackground=ink,
+                                highlightbackground=lav, highlightcolor=PURPLE)
+                elif cls in ("Text",):
+                    w.configure(bg=inp, fg=ink, insertbackground=ink,
+                                selectbackground=lav, selectforeground=ink)
+                elif cls in ("Checkbutton", "Radiobutton"):
+                    cur = w.cget("bg")
+                    new_bg = bg if cur in light_bgs else cur
+                    w.configure(bg=new_bg, fg=ink, activebackground=new_bg, selectcolor=new_bg)
+                elif cls == "Scrollbar":
+                    w.configure(bg=panel, troughcolor=bg)
+                elif cls == "Button":
+                    pass
+            except Exception:
+                pass
+            try:
+                for child in w.winfo_children():
+                    fix(child)
             except Exception:
                 pass
 
-        # sidebar
-        try:
-            self.sidebar.configure(bg=bg)
-        except Exception:
-            pass
+        self.root.configure(bg=bg)
+        fix(self.root)
 
-        # card canvas
-        try:
-            self.card_canvas.configure(bg=bg)
-            self.card_inner.configure(bg=bg)
-        except Exception:
-            pass
-
-        # editor area
-        try:
-            self.editor.configure(bg=inp, fg=ink, insertbackground=ink)
-        except Exception:
-            pass
-
-        # status bar
-        try:
-            self.status.configure(bg=lav, fg=ink)
-        except Exception:
-            pass
-
-        # banner canvas
-        try:
-            self.banner.configure(bg=bg)
-        except Exception:
-            pass
-
-        # mascot
+        # update mascot canvas bg
         try:
             self.mascot.configure(bg=bg)
-        except Exception:
-            pass
-
-        # plus badge
-        try:
-            self.plus_badge.configure(bg=bg)
-        except Exception:
-            pass
-
-        # editor title
-        try:
-            self.editor_name.configure(bg=panel, fg=ink)
-            self.editor_kind.configure(bg=lav, fg=ink)
-        except Exception:
-            pass
-
-        # etitle frame
-        try:
-            for w in self.root.winfo_children():
-                if isinstance(w, tk.Frame):
-                    for child in w.winfo_children():
-                        if child.winfo_class() == "Frame":
-                            try:
-                                child.configure(bg=panel)
-                            except Exception:
-                                pass
         except Exception:
             pass
 
