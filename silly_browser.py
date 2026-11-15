@@ -701,9 +701,9 @@ class SillyBrowser:
         self.root.geometry("1280x820")
         self.root.configure(bg=CREAM)
         self.root.minsize(800, 600)
-        self.root.overrideredirect(True)
-        self._setup_custom_titlebar()
         self.config = load_config()
+        # style the OS title bar using DWM (keeps taskbar visibility)
+        self.root.after(100, self._style_os_titlebar)
         self.rules = load_rules()
         self.cards = []
         self.tab_var = tk.StringVar(value="scripts")
@@ -729,51 +729,36 @@ class SillyBrowser:
         if self.config.get("dark_mode"):
             self._apply_dark_mode()
 
-    def _setup_custom_titlebar(self):
-        # outer bevel frame
-        self._titlebar = tk.Frame(self.root, bg=LAVENDER, height=32)
-        self._titlebar.pack(fill="x", side="top")
-        self._titlebar.pack_propagate(False)
 
-        # inner title area
-        title_inner = tk.Frame(self._titlebar, bg=CREAM, height=28)
-        title_inner.pack(fill="x", padx=3, pady=2)
-        title_inner.pack_propagate(False)
+    def _style_os_titlebar(self):
+        # use DWM to color the OS title bar (keeps taskbar + alt-tab)
+        try:
+            import ctypes
+            hwnd = self.root.winfo_id()
 
-        # title text
-        tk.Label(title_inner, text="  the silly browser v1.3", bg=CREAM, fg=INK, font=(H_FONT, 11, "bold")).pack(side="left")
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+            DWMWA_CAPTION_COLOR = 35
+            DWMWA_TEXT_COLOR = 36
 
-        # close button
-        close_btn = tk.Label(title_inner, text=" X ", bg=CREAM, fg=INK, font=(B_FONT, 11, "bold"), cursor="hand2")
-        close_btn.pack(side="right", padx=(0, 4))
-        close_btn.bind("<Button-1>", lambda e: self.root.destroy())
-        close_btn.bind("<Enter>", lambda e: close_btn.configure(bg="#ff6b6b", fg="white"))
-        close_btn.bind("<Leave>", lambda e: close_btn.configure(bg=CREAM, fg=INK))
+            dark = 1 if self.config.get("dark_mode") else 0
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                ctypes.byref(ctypes.c_int(dark)), ctypes.sizeof(ctypes.c_int)
+            )
 
-        # minimize button
-        min_btn = tk.Label(title_inner, text=" _ ", bg=CREAM, fg=INK, font=(B_FONT, 11, "bold"), cursor="hand2")
-        min_btn.pack(side="right")
-        min_btn.bind("<Button-1>", lambda e: self.root.iconify())
-        min_btn.bind("<Enter>", lambda e: min_btn.configure(bg=LAVENDER))
-        min_btn.bind("<Leave>", lambda e: min_btn.configure(bg=CREAM))
+            caption_color = 0x00F0B88B
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_CAPTION_COLOR,
+                ctypes.byref(ctypes.c_int(caption_color)), ctypes.sizeof(ctypes.c_int)
+            )
 
-        # drag support
-        def start_drag(e):
-            self._drag_x = e.x
-            self._drag_y = e.y
-
-        def do_drag(e):
-            x = self.root.winfo_x() + e.x - self._drag_x
-            y = self.root.winfo_y() + e.y - self._drag_y
-            self.root.geometry("+%d+%d" % (x, y))
-
-        self._titlebar.bind("<Button-1>", start_drag)
-        self._titlebar.bind("<B1-Motion>", do_drag)
-        title_inner.bind("<Button-1>", start_drag)
-        title_inner.bind("<B1-Motion>", do_drag)
-
-        # outer bevel border
-        self.root.configure(highlightbackground=LAVENDER, highlightthickness=3)
+            text_color = 0x00FFFFFF
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_TEXT_COLOR,
+                ctypes.byref(ctypes.c_int(text_color)), ctypes.sizeof(ctypes.c_int)
+            )
+        except Exception as e:
+            print("dwm style failed:", e)
 
     def set_window_icon(self):
         base = getattr(sys, "_MEIPASS", SCRIPT_DIR)
@@ -975,6 +960,8 @@ class SillyBrowser:
 
         # auto-check for updates on startup (silent)
         self.root.after(3000, lambda: self.check_for_updates(silent=True))
+
+        # fix taskbar visibility (overrideredirect removes it)
 
         # load initial
         self.load_script(self.current)
