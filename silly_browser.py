@@ -783,7 +783,7 @@ class SillyBrowser:
         self.mascot.pack(side="left")
         info = tk.Frame(mrow, bg=CREAM)
         info.pack(side="left", fill="both", expand=True, padx=(6, 0))
-        tk.Label(info, text="the silly browser", bg=CREAM, fg=INK, font=(H_FONT, 15, "bold")).pack(anchor="w")
+        tk.Label(info, text="the silly browser", bg=CREAM, fg=INK, font=(H_FONT, 13, "bold"), wraplength=140).pack(anchor="w")
         tk.Label(info, text="v1.3", bg=CREAM, fg=MUTED, font=(B_FONT, 9)).pack(anchor="w")
         self.plus_badge = tk.Label(info, text="", bg=CREAM, fg="#ffd700", font=(B_FONT, 12, "bold"))
         self.plus_badge.pack(anchor="w")
