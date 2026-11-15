@@ -1,5 +1,10 @@
 Tk bg=#1a1530
   Frame bg=#1a1530
+    Frame bg=#1a1530
+      Label bg=#1a1530
+      Label bg=#1a1530
+      Label bg=#1a1530
+  Frame bg=#1a1530
     Canvas bg=#1a1530
   Frame bg=#1a1530
     Frame bg=#1a1530

@@ -701,6 +701,8 @@ class SillyBrowser:
         self.root.geometry("1280x820")
         self.root.configure(bg=CREAM)
         self.root.minsize(800, 600)
+        self.root.overrideredirect(True)
+        self._setup_custom_titlebar()
         self.config = load_config()
         self.rules = load_rules()
         self.cards = []
@@ -726,6 +728,52 @@ class SillyBrowser:
         self.update_status_bar()
         if self.config.get("dark_mode"):
             self._apply_dark_mode()
+
+    def _setup_custom_titlebar(self):
+        # outer bevel frame
+        self._titlebar = tk.Frame(self.root, bg=LAVENDER, height=32)
+        self._titlebar.pack(fill="x", side="top")
+        self._titlebar.pack_propagate(False)
+
+        # inner title area
+        title_inner = tk.Frame(self._titlebar, bg=CREAM, height=28)
+        title_inner.pack(fill="x", padx=3, pady=2)
+        title_inner.pack_propagate(False)
+
+        # title text
+        tk.Label(title_inner, text="  the silly browser v1.3", bg=CREAM, fg=INK, font=(H_FONT, 11, "bold")).pack(side="left")
+
+        # close button
+        close_btn = tk.Label(title_inner, text=" X ", bg=CREAM, fg=INK, font=(B_FONT, 11, "bold"), cursor="hand2")
+        close_btn.pack(side="right", padx=(0, 4))
+        close_btn.bind("<Button-1>", lambda e: self.root.destroy())
+        close_btn.bind("<Enter>", lambda e: close_btn.configure(bg="#ff6b6b", fg="white"))
+        close_btn.bind("<Leave>", lambda e: close_btn.configure(bg=CREAM, fg=INK))
+
+        # minimize button
+        min_btn = tk.Label(title_inner, text=" _ ", bg=CREAM, fg=INK, font=(B_FONT, 11, "bold"), cursor="hand2")
+        min_btn.pack(side="right")
+        min_btn.bind("<Button-1>", lambda e: self.root.iconify())
+        min_btn.bind("<Enter>", lambda e: min_btn.configure(bg=LAVENDER))
+        min_btn.bind("<Leave>", lambda e: min_btn.configure(bg=CREAM))
+
+        # drag support
+        def start_drag(e):
+            self._drag_x = e.x
+            self._drag_y = e.y
+
+        def do_drag(e):
+            x = self.root.winfo_x() + e.x - self._drag_x
+            y = self.root.winfo_y() + e.y - self._drag_y
+            self.root.geometry("+%d+%d" % (x, y))
+
+        self._titlebar.bind("<Button-1>", start_drag)
+        self._titlebar.bind("<B1-Motion>", do_drag)
+        title_inner.bind("<Button-1>", start_drag)
+        title_inner.bind("<B1-Motion>", do_drag)
+
+        # outer bevel border
+        self.root.configure(highlightbackground=LAVENDER, highlightthickness=3)
 
     def set_window_icon(self):
         base = getattr(sys, "_MEIPASS", SCRIPT_DIR)
@@ -1065,22 +1113,28 @@ class SillyBrowser:
         # stylized dialog (win3.1 inspired)
         dlg = tk.Toplevel(self.root)
         dlg.title(title)
-        dlg.geometry("400x200")
+        dlg.geometry("420x260")
         dlg.configure(bg=CREAM)
         dlg.resizable(False, False)
         dlg.transient(self.root)
         dlg.grab_set()
+        dlg.lift()
+        dlg.focus_force()
 
         # bevel frame
-        frame = tk.Frame(dlg, bg=CREAM, highlightbackground=BEIGE_LO, highlightthickness=3)
-        frame.pack(fill="both", expand=True, padx=8, pady=8)
+        frame = tk.Frame(dlg, bg=CREAM, highlightbackground=BEIGE_LO, highlightthickness=3, relief="raised", bd=2)
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        tk.Label(frame, text=title, bg=CREAM, fg=INK, font=(H_FONT, 16, "bold")).pack(pady=(12, 4))
-        tk.Label(frame, text="name (without %s):" % ext, bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
+        # inner content
+        inner = tk.Frame(frame, bg=CREAM)
+        inner.pack(fill="both", expand=True, padx=12, pady=12)
+
+        tk.Label(inner, text=title, bg=CREAM, fg=INK, font=(H_FONT, 16, "bold")).pack(pady=(8, 4))
+        tk.Label(inner, text="name (without %s):" % ext, bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
 
         name_var = tk.StringVar()
-        entry = tk.Entry(frame, textvariable=name_var, font=(B_FONT, 12), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE, insertbackground=PURPLE)
-        entry.pack(fill="x", padx=24, pady=(8, 12), ipady=6)
+        entry = tk.Entry(inner, textvariable=name_var, font=(B_FONT, 12), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE, insertbackground=PURPLE)
+        entry.pack(fill="x", padx=12, pady=(8, 12), ipady=6)
         entry.focus_set()
 
         result = {"name": None}
@@ -1095,7 +1149,7 @@ class SillyBrowser:
         def on_cancel():
             dlg.destroy()
 
-        btn_row = tk.Frame(frame, bg=CREAM)
+        btn_row = tk.Frame(inner, bg=CREAM)
         btn_row.pack(pady=(0, 12))
         tk.Button(btn_row, text="cancel", font=(B_FONT, 10), bg=LAVENDER, fg=PURPLE_DARK, bd=0, padx=16, pady=6,
                   command=on_cancel).pack(side="left", padx=(0, 8))

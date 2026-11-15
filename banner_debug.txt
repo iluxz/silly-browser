@@ -1,2 +1,3 @@
 starting banner redraw, dark=True
 deleted all
+redraw complete
