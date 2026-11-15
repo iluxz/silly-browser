@@ -1345,12 +1345,12 @@ class SillyBrowser:
             starred = False
             following = False
             try:
-                # check if user has starred the repo (search first 100 stargazers)
-                url = "https://api.github.com/repos/the-silly-team/silly-browser/stargazers?per_page=100"
+                # check if user has starred the repo (via their starred list)
+                url = "https://api.github.com/users/%s/starred?per_page=100" % user
                 req = urllib.request.Request(url, headers={"User-Agent": "silly-browser"})
                 with urllib.request.urlopen(req, timeout=8) as r:
-                    stargazers = json.loads(r.read().decode())
-                starred = any(s.get("login", "").lower() == user.lower() for s in stargazers)
+                    starred_repos = json.loads(r.read().decode())
+                starred = any(r.get("full_name", "").lower() == "the-silly-team/silly-browser" for r in starred_repos)
             except Exception as e:
                 star_lbl.configure(text="⭐ starred repo: error (%s)" % str(e)[:30], fg=CORAL)
             try:
