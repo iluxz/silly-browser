@@ -1,0 +1,14 @@
+{
+  "enabled_scripts": [
+    "default.js"
+  ],
+  "enabled_css": [],
+  "site_rules": {},
+  "persistent": false,
+  "multi_mode": true,
+  "current_script": "ad-remover.js",
+  "dark_mode": true,
+  "mascot_skin": "gold",
+  "port": 8742,
+  "github_client_id": ""
+}

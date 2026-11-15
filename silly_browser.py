@@ -753,7 +753,8 @@ class SillyBrowser:
                 except Exception:
                     self.logo_img = None
 
-        banner = tk.Canvas(top, height=104, highlightthickness=0, bd=0, bg=CREAM)
+        self.banner = tk.Canvas(top, height=104, highlightthickness=0, bd=0, bg=CREAM)
+        banner = self.banner
         banner.pack(fill="x")
         for i in range(96):
             t = i / 95.0
@@ -1527,6 +1528,28 @@ class SillyBrowser:
 
         fix(self.root)
 
+        # debug: log all widgets and their colors
+        debug_lines = []
+        def log_widgets(w, depth=0):
+            try:
+                cls = w.winfo_class()
+                bg = ""
+                try:
+                    bg = w.cget("bg")
+                except Exception:
+                    bg = "N/A"
+                debug_lines.append("  " * depth + "%s bg=%s" % (cls, bg))
+            except Exception as e:
+                debug_lines.append("  " * depth + "ERR: %s" % e)
+            try:
+                for child in w.winfo_children():
+                    log_widgets(child, depth+1)
+            except Exception:
+                pass
+        log_widgets(self.root)
+        with open(os.path.join(SCRIPT_DIR, "darkmode_debug.txt"), "w") as f:
+            f.write("\n".join(debug_lines))
+
         # update specific widgets that might be missed
         for attr in ("mascot", "card_canvas", "card_inner", "banner", "plus_badge", "editor", "status", "editor_name", "editor_kind", "bottom_canvas"):
             try:
@@ -1557,7 +1580,11 @@ class SillyBrowser:
 
         # redraw banner gradient for dark mode
         try:
+            with open(os.path.join(SCRIPT_DIR, "banner_debug.txt"), "w") as f:
+                f.write("starting banner redraw, dark=%s\n" % dark)
             self.banner.delete("all")
+            with open(os.path.join(SCRIPT_DIR, "banner_debug.txt"), "a") as f:
+                f.write("deleted all\n")
             for i in range(96):
                 t = i / 95.0
                 if dark:
@@ -1577,8 +1604,11 @@ class SillyBrowser:
                     fill=muted, font=(B_FONT, 9))
             else:
                 self.banner.create_text(26, 34, anchor="w", text="the silly browser v1.3", fill=ink, font=(H_FONT, 26, "bold"))
-        except Exception:
-            pass
+            with open(os.path.join(SCRIPT_DIR, "banner_debug.txt"), "a") as f:
+                f.write("redraw complete\n")
+        except Exception as e:
+            with open(os.path.join(SCRIPT_DIR, "banner_debug.txt"), "a") as f:
+                f.write("ERROR: %s\n" % str(e))
 
         # update bottom bar canvas
         try:
