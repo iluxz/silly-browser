@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>the silly browser</title>
+<link rel="icon" href="logo_small.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fff8ee;font-family:'Segoe UI',sans-serif;color:#2f2a45;line-height:1.6}
+.wrap{max-width:880px;margin:0 auto;padding:32px 24px}
+.hero{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin:0 0 40px}
+.logo{height:60px}
+h1{font-family:'Comic Sans MS',cursive;font-size:44px;color:#2f2a45;margin:0}
+h1 span{color:#5cb8f0}
+.sub{color:#9a93b8;font-size:15px;margin-top:4px}
+.hero .mascot{width:96px;height:96px}
+
+section{background:#fff;border:3px solid #e8defd;border-radius:18px;padding:24px 28px;margin:0 0 24px;box-shadow:0 4px 24px rgba(139,108,240,0.08)}
+h2{font-family:'Comic Sans MS',cursive;font-size:22px;margin:0 0 10px;color:#2f2a45}
+h2 .dot{color:#ff8fb1}
+p{margin:0 0 12px}
+
+.btn{display:inline-block;font:700 15px 'Segoe UI';color:#fff;background:#8b6cf0;border:0;border-radius:24px;padding:14px 26px;text-decoration:none;margin:6px 10px 6px 0;box-shadow:0 4px 0 #6f4fd0;transition:transform .05s}
+.btn:hover{transform:translateY(-1px)}
+.btn.alt{background:#ff8fb1;box-shadow:0 4px 0 #e46b92}
+.btn.mint{background:#5fd4b0;box-shadow:0 4px 0 #3fae8d;color:#0a3a2a}
+.btn.sun{background:#ffc94d;box-shadow:0 4px 0 #e0a52c;color:#5c4400}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0 0}
+.script{background:#fff8ee;border:2px solid #e8defd;border-radius:12px;padding:12px 14px}
+.script b{color:#8b6cf0;font-size:14px;display:block;margin:0 0 4px}
+.script span{color:#6f6885;font-size:12px}
+
+.steps{counter-reset:s;list-style:none;padding:0;margin:16px 0 0}
+.steps li{counter-increment:s;padding:10px 0 10px 40px;position:relative;border-bottom:1px dashed #e8defd}
+.steps li:last-child{border-bottom:0}
+.steps li::before{content:counter(s);position:absolute;left:0;top:8px;width:26px;height:26px;border-radius:50%;background:#8b6cf0;color:#fff;font:700 13px 'Segoe UI';display:flex;align-items:center;justify-content:center;line-height:26px;text-align:center}
+
+.note{background:#fff8ee;border:2px dashed #ffc94d;border-radius:12px;padding:14px 18px;margin:16px 0 0;font-size:13px;color:#6f6885}
+.note b{color:#5c4400}
+
+footer{margin:40px 0 0;text-align:center;color:#9a93b8;font-size:12px}
+footer a{color:#8b6cf0;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <img class="logo" src="logo_small.png" alt="the silly browser">
+    <div>
+      <h1>the <span>silly</span> browser</h1>
+      <div class="sub">makes any website a little sillier. visual only, your screen only.</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>what is it?<span class="dot">.</span></h2>
+    <p>a tiny desktop app (python + tkinter) that runs a local server on <code>localhost:8742</code>. you write a javascript snippet in the app, click <b>copy bookmarklet</b>, and paste it as a bookmark in any browser. click that bookmark on any website and your script runs on that page — only on your screen, nothing changes for anyone else.</p>
+    <p>works in edge, firefox, chrome, whatever. no extensions, no store submissions, no chromium-only nonsense (family-safety friendly).</p>
+    <div class="grid">
+      <div class="script"><b>🎉 confetti</b><span>click anywhere → confetti explosion</span></div>
+      <div class="script"><b>🌈 rainbow mode</b><span>slowly shifts the whole page through hues</span></div>
+      <div class="script"><b>🌊 floating elements</b><span>everything gently bobs up and down</span></div>
+      <div class="script"><b>💬 meme text</b><span>replaces words with silly versions</span></div>
+      <div class="script"><b>✨ cursor trail</b><span>colourful dots follow your cursor</span></div>
+      <div class="script"><b> shaken screen-shake</b><span>the page trembles every 3 seconds</span></div>
+      <div class="script"><b>🎲 default</b><span>a little hello from the cube</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>download<span class="dot">.</span></h2>
+    <a class="btn" href="https://github.com/iluxz/silly-browser/releases/latest">⬇ download the installer</a>
+    <a class="btn alt" href="https://github.com/iluxz/silly-browser/releases/latest">⬇ download the .exe</a>
+    <a class="btn mint" href="https://github.com/iluxz/silly-browser">📁 source code</a>
+    <div class="note"><b>how to use:</b> run the exe → pick a script → <b>MAKE IT SILLY</b> → paste the bookmarklet into any browser → click it on any website. there's a <b>playground</b> button too, for testing.</div>
+  </section>
+
+  <section>
+    <h2>quick start<span class="dot">.</span></h2>
+    <ol class="steps">
+      <li>open the silly browser</li>
+      <li>pick a script (or write your own in the editor)</li>
+      <li>hit <b>MAKE IT SILLY</b> (saves + copies the bookmarklet)</li>
+      <li>paste the bookmarklet as a bookmark in any browser</li>
+      <li>go to any website, click the bookmark</li>
+      <li>your script runs on that page. only on your screen.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>build it yourself<span class="dot">.</span></h2>
+    <pre style="background:#fff8ee;border:2px solid #e8defd;border-radius:10px;padding:14px;font-size:13px;overflow-x:auto">pip install pyinstaller
+pyinstaller --onefile --windowed --name "silly-browser" --icon silly.ico --add-data "scripts;scripts" --add-data "logo_small.png;." silly_browser.py</pre>
+  </section>
+
+  <footer>
+    made by lux · <a href="https://github.com/iluxz/silly-browser">github.com/iluxz/silly-browser</a> · MIT license
+  </footer>
+</div>
+</body>
+</html>
+"
