@@ -882,7 +882,8 @@ class SillyBrowser:
         # bottom bar (horizontally scrollable)
         bottom_outer = tk.Frame(self.root, bg=CREAM)
         bottom_outer.pack(fill="x", side="bottom", padx=18, pady=(0, 16))
-        bottom_canvas = tk.Canvas(bottom_outer, bg=CREAM, highlightthickness=0, bd=0, height=60)
+        self.bottom_canvas = tk.Canvas(bottom_outer, bg=CREAM, highlightthickness=0, bd=0, height=60)
+        bottom_canvas = self.bottom_canvas
         bottom_canvas.pack(fill="x")
         bottom_hbar = tk.Scrollbar(bottom_outer, orient="horizontal", command=bottom_canvas.xview)
         bottom_hbar.pack(fill="x")
@@ -1499,51 +1500,23 @@ class SillyBrowser:
             lav = LAVENDER
             inp = "#fffdf8"
 
-        self.DARK_BG = bg
-        self.DARK_PANEL = panel
-        self.DARK_INK = ink
-        self.DARK_MUTED = muted
-        self.DARK_LAVENDER = lav
-        self.DARK_INPUT = inp
-
-        # light colors that should become dark
-        light_bgs = {CREAM, PANEL, LAVENDER, "#fff8ee", "#ffffff", "#e8defd", "#fffdf8", "#f4f0fa", "#fde8e8", "#e9e3f7"}
-        light_texts = {INK, "#2f2a45", MUTED, "#9a93b8"}
+        self.root.configure(bg=bg)
 
         def fix(w):
             try:
                 cls = w.winfo_class()
-                if cls in ("Frame", "Labelframe", "TFrame", "TLabelFrame"):
-                    cur = w.cget("bg")
-                    if cur in light_bgs or cur == "":
-                        w.configure(bg=bg)
-                elif cls == "Canvas":
-                    cur = w.cget("bg")
-                    if cur in light_bgs or cur == "":
-                        w.configure(bg=bg)
+                if cls in ("Frame", "Labelframe", "Canvas"):
+                    w.configure(bg=bg)
                 elif cls == "Label":
-                    cur_bg = w.cget("bg")
-                    cur_fg = w.cget("fg")
-                    new_bg = bg if cur_bg in light_bgs else cur_bg
-                    if cur_fg in light_texts:
-                        new_fg = ink if cur_fg in (INK, "#2f2a45") else muted
-                    else:
-                        new_fg = cur_fg
-                    w.configure(bg=new_bg, fg=new_fg)
+                    w.configure(bg=bg, fg=ink)
                 elif cls in ("Entry",):
-                    w.configure(bg=inp, fg=ink, insertbackground=ink,
-                                highlightbackground=lav, highlightcolor=PURPLE)
+                    w.configure(bg=inp, fg=ink, insertbackground=ink)
                 elif cls in ("Text",):
-                    w.configure(bg=inp, fg=ink, insertbackground=ink,
-                                selectbackground=lav, selectforeground=ink)
+                    w.configure(bg=inp, fg=ink, insertbackground=ink)
                 elif cls in ("Checkbutton", "Radiobutton"):
-                    cur = w.cget("bg")
-                    new_bg = bg if cur in light_bgs else cur
-                    w.configure(bg=new_bg, fg=ink, activebackground=new_bg, selectcolor=new_bg)
+                    w.configure(bg=bg, fg=ink, activebackground=bg, selectcolor=bg)
                 elif cls == "Scrollbar":
                     w.configure(bg=panel, troughcolor=bg)
-                elif cls == "Button":
-                    pass
             except Exception:
                 pass
             try:
@@ -1552,12 +1525,25 @@ class SillyBrowser:
             except Exception:
                 pass
 
-        self.root.configure(bg=bg)
         fix(self.root)
 
-        # update mascot canvas bg
+        # update specific widgets that might be missed
+        for attr in ("mascot", "card_canvas", "card_inner", "banner", "plus_badge", "editor", "status", "editor_name", "editor_kind"):
+            try:
+                w = getattr(self, attr, None)
+                if w is not None:
+                    if attr in ("editor",):
+                        w.configure(bg=inp, fg=ink, insertbackground=ink)
+                    elif attr in ("status", "editor_name", "editor_kind"):
+                        w.configure(bg=panel, fg=ink)
+                    else:
+                        w.configure(bg=bg)
+            except Exception:
+                pass
+
+        # update bottom bar canvas
         try:
-            self.mascot.configure(bg=bg)
+            self.bottom_canvas.configure(bg=bg)
         except Exception:
             pass
 
