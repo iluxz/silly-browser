@@ -1,52 +1,64 @@
-# the silly browser
+# 🧠 THE SILLY BROWSER 🧠
 
-makes any website a little sillier. visual only, your screen only.
+## MAKES ANY WEBSITE A LITTLE SILLIER. VISUAL ONLY. YOUR SCREEN ONLY. NOBODY ELSE SEES IT. THATS THE POINT.
 
-a little desktop app that runs a local server. you write a javascript snippet,
-click a bookmark, and it gets injected into whatever page you're looking at.
-works in any browser (edge, firefox, chrome, whatever) because it uses a
-bookmarklet, not an extension.
+a tiny desktop app that runs a local server on `localhost:8742`. you write a javascript snippet, click a bookmark, and it gets injected into whatever page you're looking at. works in ANY browser (edge, firefox, chrome, whatever) because it uses a bookmarklet, not an extension. no chromium needed. no store submissions. no family safety drama.
 
-## how to use
+## HOW TO USE (its not that hard)
 
 1. open the silly browser
 2. pick a script (or write your own in the editor)
-3. hit **copy bookmarklet**
+3. hit **📋 copy bookmarklet** (saves + copies the bookmarklet)
 4. paste it as a bookmark in any browser
 5. go to any website, click the bookmark
-6. your script runs on that page. only on your screen.
+6. your script runs on that page. only on your screen. everyone else sees a normal website. you see chaos.
 
-> **note:** the built-in scripts are visual effects, but the editor accepts arbitrary javascript.
+> **warning:** the built-in scripts are visual effects, but the editor accepts arbitrary javascript.
 > custom scripts have full access to the page's environment (DOM, cookies, etc.) — use responsibly.
-> only run scripts you wrote or trust.
+> only run scripts you wrote or trust. the silly browser is not responsible for what you do with it.
+> the bread foundation is not liable either.
 
-there's a **playground** button that opens a local test page so you can check
-your scripts work before unleashing them on the internet.
+there's a **playground** button that opens a local test page so you can check your scripts work before unleashing them on the internet.
 
-## features
+## FEATURES (there are a lot)
 
 - local script server on `localhost:8742`
 - script library with a built-in playground page
-- 7 starter scripts (confetti, cursor trail, floating elements, meme text,
-  rainbow mode, screen shake, default)
-- write your own js in the built-in editor
-- the little cube wears the colour of whichever script is loaded
+- 16 starter scripts including:
+  - confetti, cursor trail, floating elements, meme text, rainbow mode, screen shake
+  - highlighter, ad-remover, text-replacer, element-picker
+  - dark-mode.css, font-changer.css, rainbow-borders.css
+  - brain liquidation 1-6 (the full corporate chaos suite)
+  - silly+ premium: star trail, page wobble, cursor spotlight, gravity, matrix rain
+- write your own js/css in the built-in editor
+- the little cube wears the colour of whichever script is loaded (blue by default)
 - save/load your scripts in a plain `scripts/` folder next to the exe
+- **silly+ supporter system** — star the repo + follow the org to unlock premium features
+- key-based and github oauth verification
+- auto-updating (checks github releases on startup)
+- custom win3.1-style installer (no inno setup, pure python)
+- dark mode (in settings)
+- settings menu (mascot skins, auto-update, port, etc.)
+- new script dialog (stylized)
+- delete button (protects presets)
+- right-click to toggle scripts on/off
+- horizontal scrolling bottom bar (no more clipping)
+- custom silly title bar (overrideredirect + DWM purple)
 
-## install
+## INSTALL
 
-grab `silly-browser-setup.exe`, run it, done.
+grab `silly-browser-setup.exe` from the releases page, run it, done.
 
-or just run `silly-browser.exe` on its own.
+or just run `silly-browser.exe` on its own. no install needed.
 
-## build it yourself
+## BUILD IT YOURSELF (if you're into that)
 
 ```sh
 pip install pyinstaller
-pyinstaller --onefile --windowed --name "silly-browser" --icon silly.ico --add-data "scripts;scripts" --add-data "logo_small.png;." --add-data "silly.ico;." silly_browser.py
+pyinstaller --onefile --windowed --name "silly-browser" --icon silly.ico --add-data "scripts;scripts" --add-data "logo_small.png;." --add-data "silly.ico;." --add-data "styles;styles" silly_browser.py
 ```
 
-## license
+## LICENSE
 
 MIT
 
@@ -55,4 +67,5 @@ MIT
   <p>
     <a href="https://github.com/the-silly-team">github.com/the-silly-team</a>
   </p>
+  <p><sub>the bread foundation remains operational 🥖</sub></p>
 </div>
