@@ -698,9 +698,9 @@ class SillyBrowser:
     def __init__(self, root):
         self.root = root
         self.root.title("the silly browser v1.3")
-        self.root.geometry("1120x740")
+        self.root.geometry("1280x820")
         self.root.configure(bg=CREAM)
-        self.root.minsize(700, 500)
+        self.root.minsize(800, 600)
         self.config = load_config()
         self.rules = load_rules()
         self.cards = []
