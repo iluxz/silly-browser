@@ -87,6 +87,11 @@ SCRIPT_COLORS = {
     "brain-liquidation-4.js": ("#ffbd4a", "#d49a2a"),
     "brain-liquidation-5.js": ("#e9a84e", "#b8802a"),
     "brain-liquidation-6.js": ("#ff00cc", "#cc00a3"),
+    "silly-plus-stars.js": ("#ffd700", "#e6c200"),
+    "silly-plus-wobble.js": ("#ff6b6b", "#d64f4f"),
+    "silly-plus-spotlight.js": ("#2f2a45", "#1a1530"),
+    "silly-plus-gravity.js": ("#69db7c", "#3fae8d"),
+    "silly-plus-matrix.js": ("#00ff41", "#00cc33"),
 }
 
 
@@ -779,7 +784,10 @@ class SillyBrowser:
         info = tk.Frame(mrow, bg=CREAM)
         info.pack(side="left", fill="both", expand=True, padx=(6, 0))
         tk.Label(info, text="the silly browser", bg=CREAM, fg=INK, font=(H_FONT, 15, "bold")).pack(anchor="w")
-        tk.Label(info, text="v1.2 advanced", bg=CREAM, fg=MUTED, font=(B_FONT, 9)).pack(anchor="w")
+        tk.Label(info, text="v1.3", bg=CREAM, fg=MUTED, font=(B_FONT, 9)).pack(anchor="w")
+        self.plus_badge = tk.Label(info, text="", bg=CREAM, fg="#ffd700", font=(B_FONT, 12, "bold"))
+        self.plus_badge.pack(anchor="w")
+        self._update_plus_badge()
 
         # search
         search_row = tk.Frame(sidebar, bg=CREAM)
@@ -831,6 +839,9 @@ class SillyBrowser:
         tk.Checkbutton(tog, text="persistent (spa)", variable=self.persist_var, bg=CREAM, fg=INK,
                        font=(B_FONT, 9), activebackground=CREAM,
                        command=self.on_toggle_persist).pack(anchor="w")
+
+        Pill(sidebar, "⭐ silly+", self.show_silly_plus, fill="#ffd700", dark="#e6c200", fg="#5c4400",
+             width=280, height=32, font=(B_FONT, 9, "bold")).pack(fill="x", pady=(6, 4))
 
         Pill(sidebar, "🌐 site rules", self.add_site_rule, fill=LAVENDER, dark="#d5cbec", fg=PURPLE_DARK,
              width=280, height=32, font=(B_FONT, 9, "bold")).pack(fill="x", pady=(6, 4))
@@ -1209,6 +1220,12 @@ class SillyBrowser:
             parts.append("persistent")
         self.status.configure(text="enabled: " + ", ".join(parts) + "  ✦  localhost:%d  ✦  v%s" % (PORT, CURRENT_VERSION))
 
+    def _update_plus_badge(self):
+        if self.config.get("silly_plus"):
+            self.plus_badge.configure(text="⭐ silly+ supporter")
+        else:
+            self.plus_badge.configure(text="")
+
     def check_for_updates(self, silent=False):
         import urllib.request, json, re
         try:
@@ -1283,6 +1300,112 @@ class SillyBrowser:
         save_rules(self.rules)
         self.status.configure(text="rule added for %s  ✦" % domain)
         self.root.after(2400, lambda: self.status.configure(text=""))
+
+    def show_silly_plus(self):
+        # create a toplevel window for silly+ verification
+        win = tk.Toplevel(self.root)
+        win.title("silly+ supporter")
+        win.geometry("420x380")
+        win.configure(bg=CREAM)
+        win.resizable(False, False)
+        win.transient(self.root)
+        win.grab_set()
+
+        tk.Label(win, text="⭐ silly+ supporter", bg=CREAM, fg=INK, font=(H_FONT, 18, "bold")).pack(pady=(16, 4))
+        tk.Label(win, text="support the silly team on github to unlock silly+", bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
+
+        # username input
+        tk.Label(win, text="your github username:", bg=CREAM, fg=INK, font=(B_FONT, 10, "bold")).pack(anchor="w", padx=20, pady=(12, 2))
+        user_var = tk.StringVar(value=self.config.get("github_user", ""))
+        entry = tk.Entry(win, textvariable=user_var, font=(B_FONT, 11), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE)
+        entry.pack(fill="x", padx=20, ipady=4)
+
+        # status labels
+        star_lbl = tk.Label(win, text="⭐ starred repo: checking...", bg=CREAM, fg=MUTED, font=(B_FONT, 10))
+        star_lbl.pack(anchor="w", padx=20, pady=(8, 0))
+        follow_lbl = tk.Label(win, text="👁️ following org: checking...", bg=CREAM, fg=MUTED, font=(B_FONT, 10))
+        follow_lbl.pack(anchor="w", padx=20, pady=(2, 0))
+
+        result_lbl = tk.Label(win, text="", bg=CREAM, fg=INK, font=(B_FONT, 11, "bold"))
+        result_lbl.pack(pady=(12, 4))
+
+        def check():
+            import urllib.request, json
+            user = user_var.get().strip()
+            if not user:
+                result_lbl.configure(text="enter a username first", fg=CORAL)
+                return
+            self.config["github_user"] = user
+            save_config(self.config)
+            star_lbl.configure(text="⭐ starred repo: checking...", fg=MUTED)
+            follow_lbl.configure(text="👁️ following org: checking...", fg=MUTED)
+            result_lbl.configure(text="checking...", fg=MUTED)
+            win.update()
+
+            starred = False
+            following = False
+            try:
+                # check if user has starred the repo (search first 100 stargazers)
+                url = "https://api.github.com/repos/the-silly-team/silly-browser/stargazers?per_page=100"
+                req = urllib.request.Request(url, headers={"User-Agent": "silly-browser"})
+                with urllib.request.urlopen(req, timeout=8) as r:
+                    stargazers = json.loads(r.read().decode())
+                starred = any(s.get("login", "").lower() == user.lower() for s in stargazers)
+            except Exception as e:
+                star_lbl.configure(text="⭐ starred repo: error (%s)" % str(e)[:30], fg=CORAL)
+            try:
+                # check if user follows the org
+                url = "https://api.github.com/users/%s/following/the-silly-team" % user
+                req = urllib.request.Request(url, headers={"User-Agent": "silly-browser"})
+                try:
+                    with urllib.request.urlopen(req, timeout=8) as r:
+                        following = (r.status == 204)
+                except urllib.error.HTTPError as e:
+                    following = (e.code == 204)
+            except Exception as e:
+                follow_lbl.configure(text="👁️ following org: error", fg=CORAL)
+
+            star_lbl.configure(text="⭐ starred repo: " + ("✓ yes" if starred else "✗ no"), fg=(MINT if starred else CORAL))
+            follow_lbl.configure(text="👁️ following org: " + ("✓ yes" if following else "✗ no"), fg=(MINT if following else CORAL))
+
+            if starred and following:
+                self.config["silly_plus"] = True
+                save_config(self.config)
+                result_lbl.configure(text="you're a silly+ supporter! 🎉", fg=MINT)
+                self.mascot.cheer()
+                # enable premium scripts
+                for s in ["element-picker.js"]:
+                    if s not in self.config.get("enabled_scripts", []):
+                        self.config.setdefault("enabled_scripts", []).append(s)
+                save_config(self.config)
+                self.refresh_cards()
+                self.update_status_bar()
+            else:
+                self.config["silly_plus"] = False
+                save_config(self.config)
+                result_lbl.configure(text="star + follow to unlock silly+", fg=CORAL)
+
+        tk.Button(win, text="check", font=(B_FONT, 11, "bold"), bg=PURPLE, fg="white", bd=0, padx=20, pady=6,
+                  command=check).pack(pady=(8, 4))
+
+        # instructions
+        instr = tk.Frame(win, bg=CREAM)
+        instr.pack(fill="x", padx=20, pady=(8, 4))
+        tk.Label(instr, text="1. star github.com/the-silly-team/silly-browser", bg=CREAM, fg=INK, font=(B_FONT, 9)).pack(anchor="w")
+        tk.Label(instr, text="2. follow github.com/the-silly-team", bg=CREAM, fg=INK, font=(B_FONT, 9)).pack(anchor="w")
+        tk.Label(instr, text="3. enter your username above and click check", bg=CREAM, fg=INK, font=(B_FONT, 9)).pack(anchor="w")
+
+        # links
+        link_row = tk.Frame(win, bg=CREAM)
+        link_row.pack(pady=(4, 8))
+        tk.Button(link_row, text="⭐ star repo", font=(B_FONT, 9), bg=LAVENDER, fg=PURPLE_DARK, bd=0, padx=12, pady=4,
+                  command=lambda: webbrowser.open("https://github.com/the-silly-team/silly-browser")).pack(side="left", padx=4)
+        tk.Button(link_row, text="👁️ follow org", font=(B_FONT, 9), bg=LAVENDER, fg=PURPLE_DARK, bd=0, padx=12, pady=4,
+                  command=lambda: webbrowser.open("https://github.com/the-silly-team")).pack(side="left", padx=4)
+
+        # auto-check on open
+        if self.config.get("github_user"):
+            win.after(500, check)
 
 
 # ── server ───────────────────────────────────────────────────────────────────

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>the silly browser v2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#fff8ee;color:#2f2a45;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{background:#fff;border-bottom:3px solid #e8defd;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.toolbar button{background:#8b6cf0;color:#fff;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font:700 13px 'Segoe UI';min-width:32px}
+.toolbar button:hover{background:#6f4fd0}
+.toolbar button:disabled{background:#ccc;cursor:default}
+.address-bar{flex:1;display:flex;align-items:center;background:#fff8ee;border:2px solid #e8defd;border-radius:20px;padding:6px 14px;gap:8px}
+.address-bar input{flex:1;border:0;background:transparent;font:13px 'Segoe UI';color:#2f2a45;outline:none}
+.address-bar .lock{color:#5fd4b0;font-size:12px}
+.main{flex:1;display:flex;overflow:hidden}
+.content{flex:1;position:relative;background:#fff}
+.content iframe{width:100%;height:100%;border:0}
+.content .blocked{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;color:#6f6885}
+.content .blocked h2{color:#2f2a45}
+.sidebar{width:320px;background:#fff;border-left:3px solid #e8defd;display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:12px;border-bottom:2px solid #e8defd;display:flex;align-items:center;gap:8px}
+.sidebar-header h3{font-family:'Comic Sans MS',cursive;font-size:16px;color:#2f2a45}
+.mascot-area{padding:8px;text-align:center}
+.tabs{display:flex;gap:4px;padding:8px;border-bottom:2px solid #e8defd;overflow-x:auto}
+.tab{background:#fff8ee;border:2px solid #e8defd;border-radius:8px;padding:4px 10px;font:12px 'Segoe UI';cursor:pointer;white-space:nowrap}
+.tab.active{background:#8b6cf0;color:#fff;border-color:#8b6cf0}
+.script-list{flex:1;overflow-y:auto;padding:8px}
+.script-card{background:#fff8ee;border:2px solid #e8defd;border-radius:10px;padding:8px;margin-bottom:6px;cursor:pointer}
+.script-card:hover{border-color:#8b6cf0}
+.script-card .name{font-weight:700;font-size:13px;color:#2f2a45}
+.script-card .status{font-size:11px;color:#9a93b8}
+.script-card.enabled .status{color:#5fd4b0;font-weight:700}
+.editor-area{border-top:2px solid #e8defd;padding:8px}
+.editor-area textarea{width:100%;height:120px;border:2px solid #e8defd;border-radius:8px;padding:8px;font:12px Consolas;resize:none;outline:none}
+.editor-area .btns{display:flex;gap:6px;margin-top:6px}
+.editor-area .btns button{flex:1;font:700 11px 'Segoe UI';padding:6px;border-radius:8px}
+.toggle-row{display:flex;gap:8px;padding:8px;border-top:2px solid #e8defd;font-size:12px}
+.toggle-row label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.status-bar{padding:6px 12px;background:#e8defd;font:11px 'Segoe UI';color:#2f2a45;border-top:2px solid #e8defd}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button onclick="goBack()" id="backBtn" title="Back">◀</button>
+  <button onclick="goForward()" id="fwdBtn" title="Forward">▶</button>
+  <button onclick="reload()" title="Reload">↻</button>
+  <div class="address-bar">
+    <span class="lock" id="lock">🔓</span>
+    <input type="text" id="address" placeholder="enter a url..." onkeydown="if(event.key==='Enter')navigate(this.value)">
+  </div>
+  <button onclick="toggleSidebar()" title="Toggle sidebar">📋</button>
+  <button onclick="injectNow()" title="Inject scripts now">✨</button>
+</div>
+<div class="main">
+  <div class="content" id="content">
+    <iframe id="webview" src="https://example.com"></iframe>
+    <div class="blocked hidden" id="blocked">
+      <h2>this site can't be embedded</h2>
+      <p>it blocks iframes (X-Frame-Options). open in system browser instead?</p>
+      <button onclick="openExternal()">open externally</button>
+    </div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h3>the silly browser</h3>
+      <span style="margin-left:auto;font-size:11px;color:#9a93b8">v2.0</span>
+    </div>
+    <div class="mascot-area" id="mascot"></div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('scripts')">📜 scripts</div>
+      <div class="tab" onclick="switchTab('styles')">🎨 styles</div>
+    </div>
+    <div class="script-list" id="scriptList"></div>
+    <div class="editor-area">
+      <textarea id="editor" placeholder="write your script here..."></textarea>
+      <div class="btns">
+        <button onclick="saveScript()" style="background:#8b6cf0">💾 save</button>
+        <button onclick="injectNow()" style="background:#5fd4b0;color:#0a3a2a">✨ inject</button>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <label><input type="checkbox" id="multiToggle"> stack multiple</label>
+      <label><input type="checkbox" id="persistToggle"> persistent</label>
+    </div>
+    <div class="status-bar" id="statusBar">ready ✦</div>
+  </div>
+</div>
+<script>
+// ── browser state ──────────────────────────────────────────────────────────
+let currentUrl = 'https://example.com';
+let history = [];
+let historyIndex = -1;
+let sidebarVisible = true;
+
+// ── navigation ─────────────────────────────────────────────────────────────
+function navigate(url) {
+  if (!url.startsWith('http')) url = 'https://' + url;
+  currentUrl = url;
+  document.getElementById('address').value = url;
+  document.getElementById('webview').src = url;
+  history.push(url);
+  historyIndex = history.length - 1;
+  updateNavButtons();
+  updateLock();
+  // auto-inject after page loads
+  setTimeout(tryInject, 1500);
+}
+
+function goBack() {
+  if (historyIndex > 0) {
+    historyIndex--;
+    currentUrl = history[historyIndex];
+    document.getElementById('address').value = currentUrl;
+    document.getElementById('webview').src = currentUrl;
+    updateNavButtons();
+  }
+}
+
+function goForward() {
+  if (historyIndex < history.length - 1) {
+    historyIndex++;
+    currentUrl = history[historyIndex];
+    document.getElementById('address').value = currentUrl;
+    document.getElementById('webview').src = currentUrl;
+    updateNavButtons();
+  }
+}
+
+function reload() {
+  document.getElementById('webview').src = currentUrl;
+  setTimeout(tryInject, 1500);
+}
+
+function updateNavButtons() {
+  document.getElementById('backBtn').disabled = historyIndex <= 0;
+  document.getElementById('fwdBtn').disabled = historyIndex >= history.length - 1;
+}
+
+function updateLock() {
+  const lock = document.getElementById('lock');
+  lock.textContent = currentUrl.startsWith('https') ? '🔒' : '🔓';
+  lock.style.color = currentUrl.startsWith('https') ? '#5fd4b0' : '#ff6b6b';
+}
+
+function openExternal() {
+  window.open(currentUrl, '_blank');
+}
+
+// ── sidebar ────────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  sidebarVisible = !sidebarVisible;
+  document.getElementById('sidebar').classList.toggle('hidden', !sidebarVisible);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  // placeholder - would load scripts or styles
+}
+
+// ── injection ──────────────────────────────────────────────────────────────
+function tryInject() {
+  const scripts = ['confetti.js']; // placeholder
+  // in real version, this would fetch from pywebview API
+  console.log('[silly browser] would inject scripts here');
+}
+
+function injectNow() {
+  const code = document.getElementById('editor').value;
+  try {
+    const iframe = document.getElementById('webview');
+    // can't inject into cross-origin iframe directly
+    // in real version, use pywebview's evaluate_js on the webview
+    console.log('[silly] inject:', code.slice(0, 50));
+    document.getElementById('statusBar').textContent = 'injected! (simulated) ✦';
+  } catch (e) {
+    document.getElementById('statusBar').textContent = 'inject failed: ' + e.message;
+  }
+}
+
+function saveScript() {
+  const code = document.getElementById('editor').value;
+  // in real version, save via pywebview API
+  document.getElementById('statusBar').textContent = 'saved! ✦';
+}
+
+// ── mascot (simple version) ────────────────────────────────────────────────
+function drawMascot() {
+  const area = document.getElementById('mascot');
+  area.innerHTML = '<canvas id="mascotCanvas" width="100" height="90"></canvas>';
+  const canvas = document.getElementById('mascotCanvas');
+  const ctx = canvas.getContext('2d');
+  let t = 0;
+  function loop() {
+    t += 0.05;
+    ctx.clearRect(0, 0, 100, 90);
+    const bob = Math.sin(t) * 4;
+    const cx = 50, cy = 42 + bob;
+    // shadow
+    ctx.fillStyle = '#e6ddf5';
+    ctx.beginPath();
+    ctx.ellipse(cx, 82 - Math.abs(bob)*0.5, 22, 6, 0, 0, Math.PI*2);
+    ctx.fill();
+    // body
+    ctx.fillStyle = '#5cb8f0';
+    ctx.strokeStyle = '#3484c4';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(cx-20, cy-20, 40, 40, 8);
+    ctx.fill();
+    ctx.stroke();
+    // gloss
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.beginPath();
+    ctx.ellipse(cx-12, cy-14, 10, 6, 0, 0, Math.PI*2);
+    ctx.fill();
+    // eyes
+    ctx.fillStyle = '#2f2a45';
+    const blink = (t % 4) > 3.4 ? 1.5 : 10;
+    ctx.beginPath();
+    ctx.ellipse(cx-8, cy-6, 4, blink/2, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx+8, cy-6, 4, blink/2, 0, 0, Math.PI*2);
+    ctx.fill();
+    // mouth
+    ctx.strokeStyle = '#2f2a45';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy+2, 8, 0.3, Math.PI-0.3);
+    ctx.stroke();
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+// ── init ───────────────────────────────────────────────────────────────────
+drawMascot();
+navigate('https://example.com');
+</script>
+</body>
+</html>
