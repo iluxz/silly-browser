@@ -18,13 +18,13 @@ OutputBaseFilename=silly-browser-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=classic
-WizardImageFile=setup_bg.bmp
+WizardImageFile=setup_panel.bmp
 SetupIconFile=silly.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 UninstallDisplayName={#MyAppName}
 ArchitecturesInstallIn64BitMode=x64compatible
-PrivilegesRequired=lowest
 MinVersion=10.0
+PrivilegesRequired=lowest
 ShowLanguageDialog=no
 
 [Languages]
@@ -37,6 +37,22 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "logo.png"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "setup_bg.bmp"; DestDir: "{tmp}"; Flags: dontcopy
+
+[Code]
+procedure InitializeWizard();
+var
+  BgImage: TBitmapImage;
+begin
+  WizardForm.Color := clBlack;
+  ExtractTemporaryFile('setup_bg.bmp');
+  BgImage := TBitmapImage.Create(WizardForm);
+  BgImage.Parent := WizardForm;
+  BgImage.SetBounds(0, 0, WizardForm.ClientWidth, WizardForm.ClientHeight);
+  BgImage.Bitmap.LoadFromFile(ExpandConstant('{tmp}\setup_bg.bmp'));
+  BgImage.Stretch := True;
+  BgImage.SendToBack;
+end;
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
