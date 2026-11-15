@@ -16,6 +16,10 @@ bookmarklet, not an extension.
 5. go to any website, click the bookmark
 6. your script runs on that page. only on your screen.
 
+> **note:** the built-in scripts are visual effects, but the editor accepts arbitrary javascript.
+> custom scripts have full access to the page's environment (DOM, cookies, etc.) — use responsibly.
+> only run scripts you wrote or trust.
+
 there's a **playground** button that opens a local test page so you can check
 your scripts work before unleashing them on the internet.
 

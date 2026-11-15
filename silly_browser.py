@@ -273,6 +273,37 @@ def ensure_defaults():
   console.log("[silly] text replacer active!");
 })();
 ''',
+        "element-picker.js": '''// silly browser - element picker (click to get selector)
+(function() {
+  const box = document.createElement("div");
+  box.style.cssText = "position:fixed;pointer-events:none;z-index:999999;border:2px solid #ff6b6b;background:rgba(255,107,107,0.15);transition:all .08s;";
+  document.body.appendChild(box);
+  let active = true;
+  const handler = (e) => {
+    if (!active) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el || el === box) return;
+    const r = el.getBoundingClientRect();
+    box.style.left = r.left + "px";
+    box.style.top = r.top + "px";
+    box.style.width = r.width + "px";
+    box.style.height = r.height + "px";
+    e.preventDefault();
+    e.stopPropagation();
+    // build selector
+    let sel = el.tagName.toLowerCase();
+    if (el.id) sel = "#" + el.id;
+    else if (el.className) sel += "." + el.className.trim().split(/\\s+/).join(".");
+    console.log("[silly picker] selector:", sel, "| text:", (el.textContent||"").slice(0,60));
+    if (navigator.clipboard) navigator.clipboard.writeText(sel).catch(()=>{});
+    active = false;
+    box.style.border = "2px solid #69db7c";
+    setTimeout(() => { box.remove(); active = true; }, 1500);
+  };
+  document.addEventListener("click", handler, true);
+  console.log("[silly] element picker active! click any element to get its selector (copied to clipboard).");
+})();
+''',
     }
     for name, code in defaults.items():
         path = os.path.join(SCRIPTS_FOLDER, name)
@@ -313,12 +344,32 @@ class Handler(http.server.BaseHTTPRequestHandler):
         multi = cfg.get("multi_mode", True)
 
         if self.path.startswith("/inject.js"):
-            # build bundle
+            cfg = load_config()
+            rules = load_rules()
+            enabled_js = list(cfg.get("enabled_scripts", []))
+            # site rules: add scripts for matching domain
+            host = ""
+            if "?" in self.path:
+                for param in self.path.split("?", 1)[1].split("&"):
+                    if param.startswith("host="):
+                        host = param.split("=", 1)[1]
+                        try:
+                            host = urllib.parse.unquote(host)
+                        except Exception:
+                            pass
+            if host:
+                for domain, scripts in rules.items():
+                    if domain.lower() in host.lower():
+                        for s in scripts:
+                            if s.endswith(".js") and s not in enabled_js:
+                                enabled_js.append(s)
+            persistent = cfg.get("persistent", False)
+            multi = cfg.get("multi_mode", True)
             parts = []
             if persistent:
-                parts.append('// silly browser - persistent loader\n'
-                             'if (!window.__silly_loaded) { window.__silly_loaded = true;\n')
-            for name in (enabled_js if multi else [cfg.get("current_script", "default.js")]):
+                parts.append("// silly browser - persistent mode\n")
+            target_scripts = enabled_js if multi else [cfg.get("current_script", "default.js")]
+            for name in target_scripts:
                 path = os.path.join(SCRIPTS_FOLDER, name)
                 if os.path.exists(path):
                     try:
@@ -326,12 +377,28 @@ class Handler(http.server.BaseHTTPRequestHandler):
                             parts.append("// === " + name + " ===\n" + f.read() + "\n")
                     except Exception:
                         pass
-            if persistent:
-                parts.append('}\n')
             body = "\n".join(parts) if parts else "console.log('[silly] nothing enabled');"
             self._send(body, "application/javascript")
 
         elif self.path.startswith("/inject.css"):
+            cfg = load_config()
+            rules = load_rules()
+            enabled_css = list(cfg.get("enabled_css", []))
+            host = ""
+            if "?" in self.path:
+                for param in self.path.split("?", 1)[1].split("&"):
+                    if param.startswith("host="):
+                        host = param.split("=", 1)[1]
+                        try:
+                            host = urllib.parse.unquote(host)
+                        except Exception:
+                            pass
+            if host:
+                for domain, scripts in rules.items():
+                    if domain.lower() in host.lower():
+                        for s in scripts:
+                            if s.endswith(".css") and s not in enabled_css:
+                                enabled_css.append(s)
             parts = []
             for name in enabled_css:
                 path = os.path.join(CSS_FOLDER, name)
@@ -365,7 +432,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
         data = body.encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", ctype)
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
@@ -380,11 +446,11 @@ def bookmarklet_code(persistent, multi):
     loader = (
         "javascript:(function(){"
         "var s=document.createElement('script');"
-        "s.src='http://localhost:8742/inject.js?'+Date.now();"
+        "s.src='http://localhost:8742/inject.js?host='+encodeURIComponent(location.hostname)+'&'+Date.now();"
         "document.body.appendChild(s);"
         "var c=document.createElement('link');"
         "if(!document.querySelector('link[href*=\"inject.css\"]')){"
-        "c.rel='stylesheet';c.href='http://localhost:8742/inject.css?'+Date.now();"
+        "c.rel='stylesheet';c.href='http://localhost:8742/inject.css?host='+encodeURIComponent(location.hostname)+'&'+Date.now();"
         "document.head.appendChild(c);"
         "}"
     )
@@ -393,14 +459,14 @@ def bookmarklet_code(persistent, multi):
             "if(!window.__silly_persist){window.__silly_persist=true;"
             "var o=new MutationObserver(function(){"
             "if(!document.querySelector('script[src*=\"inject.js\"]')){"
-            "var s2=document.createElement('script');s2.src='http://localhost:8742/inject.js?'+Date.now();document.body.appendChild(s2);"
+            "var s2=document.createElement('script');s2.src='http://localhost:8742/inject.js?host='+encodeURIComponent(location.hostname)+'&'+Date.now();document.body.appendChild(s2);"
             "}"
             "if(!document.querySelector('link[href*=\"inject.css\"]')){"
-            "var c2=document.createElement('link');c2.rel='stylesheet';c2.href='http://localhost:8742/inject.css?'+Date.now();document.head.appendChild(c2);"
+            "var c2=document.createElement('link');c2.rel='stylesheet';c2.href='http://localhost:8742/inject.css?host='+encodeURIComponent(location.hostname)+'&'+Date.now();document.head.appendChild(c2);"
             "}"
             "});"
             "o.observe(document.body,{childList:true,subtree:true});"
-            "window.addEventListener('popstate',function(){setTimeout(function(){var s3=document.createElement('script');s3.src='http://localhost:8742/inject.js?'+Date.now();document.body.appendChild(s3);},100);});"
+            "window.addEventListener('popstate',function(){setTimeout(function(){var s3=document.createElement('script');s3.src='http://localhost:8742/inject.js?host='+encodeURIComponent(location.hostname)+'&'+Date.now();document.body.appendChild(s3);},100);});"
             "}"
         )
     loader += "console.log('[silly browser] injected!');})();"
@@ -689,6 +755,7 @@ class SillyBrowser:
         se.pack(fill="x", ipady=4, padx=2)
         se.insert(0, "🔍 search scripts...")
         se.bind("<FocusIn>", lambda e: (se.delete(0, tk.END) if se.get().startswith("🔍") else None))
+        self.search_entry = se
 
         # tabs: scripts / styles
         tabrow = tk.Frame(sidebar, bg=CREAM)
@@ -727,6 +794,9 @@ class SillyBrowser:
         tk.Checkbutton(tog, text="persistent (spa)", variable=self.persist_var, bg=CREAM, fg=INK,
                        font=(B_FONT, 9), activebackground=CREAM,
                        command=self.on_toggle_persist).pack(anchor="w")
+
+        Pill(sidebar, "🌐 site rules", self.add_site_rule, fill=LAVENDER, dark="#d5cbec", fg=PURPLE_DARK,
+             width=280, height=32, font=(B_FONT, 9, "bold")).pack(fill="x", pady=(6, 4))
 
         # right side: editor
         right = tk.Frame(main, bg=CREAM)
@@ -789,7 +859,9 @@ class SillyBrowser:
         self.load_script(self.current)
 
     def focus_search(self):
-        pass
+        if hasattr(self, "search_entry") and self.search_entry:
+            self.search_entry.focus_set()
+            self.search_entry.select_range(0, tk.END)
 
     # ── data ─────────────────────────────────────────────────────────────────
 
@@ -1050,17 +1122,20 @@ class SillyBrowser:
 
     def undo(self):
         if self.server is None:
+            self.status.configure(text="server is not running  ✦")
             return
-        # inject undo script
+        # fetch the undo script and copy it to clipboard
         try:
             import urllib.request
             with urllib.request.urlopen("http://localhost:%d/undo" % PORT, timeout=3) as r:
-                pass
+                undo_script = r.read().decode("utf-8")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(undo_script)
+            self.root.update()
+            self.mascot.cheer()
+            self.status.configure(text="undo script copied! paste as bookmark to remove injected stuff  ✦")
         except Exception:
-            pass
-        self.root.clipboard_clear()
-        self.root.clipboard_append(bookmarklet_code(self.config.get("persistent", False), self.config.get("multi_mode", True)))
-        self.status.configure(text="undo: paste the bookmarklet again to remove injected stuff  ✦")
+            self.status.configure(text="server not reachable  ✦")
         self.root.after(3200, lambda: self.status.configure(text=""))
 
     def update_status_bar(self):
