@@ -961,8 +961,7 @@ class SillyBrowser:
              width=110, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "⚙️ settings", self.open_settings, fill="#e9e3f7", dark="#d5cbec", fg=PURPLE_DARK,
              width=120, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
-        Pill(bottom, "dark", self._quick_dark_toggle, fill="#2f2a45", dark="#1a1530", fg="white",
-             width=90, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
+
 
         # status bar
         sbar = tk.Frame(self.root, bg=LAVENDER)
@@ -1669,13 +1668,6 @@ class SillyBrowser:
             self.bottom_canvas.configure(bg=bg)
         except Exception:
             pass
-
-    def _quick_dark_toggle(self):
-        self.config["dark_mode"] = not self.config.get("dark_mode", False)
-        save_config(self.config)
-        self._apply_dark_mode()
-        self.status.configure(text="dark mode: %s  ✦" % ("on" if self.config["dark_mode"] else "off"))
-        self.root.after(2400, lambda: self.status.configure(text=""))
         # update mascot colors if dark
         if dark:
             self.mascot.configure(bg=bg)
