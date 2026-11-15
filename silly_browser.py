@@ -781,6 +781,7 @@ class SillyBrowser:
         mrow.pack(fill="x", pady=(0, 10))
         self.mascot = Mascot(mrow)
         self.mascot.pack(side="left")
+        self._apply_mascot_skin()
         info = tk.Frame(mrow, bg=CREAM)
         info.pack(side="left", fill="both", expand=True, padx=(6, 0))
         tk.Label(info, text="the silly browser", bg=CREAM, fg=INK, font=(H_FONT, 13, "bold"), wraplength=140).pack(anchor="w")
@@ -906,6 +907,8 @@ class SillyBrowser:
              width=90, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
         Pill(bottom, "🗑️ delete", self.delete_current, fill="#fde8e8", dark="#f5c6c6", fg=CORAL_DARK,
              width=110, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
+        Pill(bottom, "⚙️ settings", self.open_settings, fill="#e9e3f7", dark="#d5cbec", fg=PURPLE_DARK,
+             width=120, height=52, font=(B_FONT, 11, "bold")).pack(side="left", padx=(10, 0))
 
         # status bar
         sbar = tk.Frame(self.root, bg=LAVENDER)
@@ -1350,6 +1353,152 @@ class SillyBrowser:
         sys.exit(0)
 
     # site rules
+    def open_settings(self):
+        win = tk.Toplevel(self.root)
+        win.title("settings")
+        win.geometry("460x520")
+        win.configure(bg=CREAM)
+        win.resizable(False, False)
+        win.transient(self.root)
+        win.grab_set()
+
+        tk.Label(win, text="⚙️ settings", bg=CREAM, fg=INK, font=(H_FONT, 18, "bold")).pack(pady=(16, 4))
+        tk.Label(win, text="customize your silly browser", bg=CREAM, fg=MUTED, font=(B_FONT, 10)).pack()
+
+        # scrollable content
+        canvas = tk.Canvas(win, bg=CREAM, highlightthickness=0, bd=0)
+        canvas.pack(fill="both", expand=True, padx=8, pady=8)
+        sb = tk.Scrollbar(win, orient="vertical", command=canvas.yview)
+        sb.pack(side="right", fill="y")
+        canvas.configure(yscrollcommand=sb.set)
+        content = tk.Frame(canvas, bg=CREAM)
+        canvas.create_window((0, 0), window=content, anchor="nw")
+        content.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        # ── appearance ──
+        tk.Label(content, text="appearance", bg=CREAM, fg=PURPLE, font=(B_FONT, 12, "bold")).pack(anchor="w", pady=(8, 4))
+
+        # dark mode toggle
+        dark_var = tk.BooleanVar(value=self.config.get("dark_mode", False))
+        tk.Checkbutton(content, text="dark mode (app ui)", variable=dark_var, bg=CREAM, fg=INK, font=(B_FONT, 10), activebackground=CREAM,
+                       command=lambda: self._toggle_dark_mode(dark_var.get())).pack(anchor="w", padx=4)
+
+        # mascot skin
+        tk.Label(content, text="mascot skin:", bg=CREAM, fg=INK, font=(B_FONT, 10, "bold")).pack(anchor="w", padx=4, pady=(8, 2))
+        skin_var = tk.StringVar(value=self.config.get("mascot_skin", "blue"))
+        skins = [("blue (default)", "blue"), ("pink", "pink"), ("green", "green"), ("purple", "purple"), ("gold", "gold")]
+        for label, val in skins:
+            tk.Radiobutton(content, text=label, variable=skin_var, value=val, bg=CREAM, fg=INK, font=(B_FONT, 9), activebackground=CREAM,
+                           command=lambda v=val: self._set_mascot_skin(v)).pack(anchor="w", padx=16)
+
+        # ── behavior ──
+        tk.Label(content, text="behavior", bg=CREAM, fg=PURPLE, font=(B_FONT, 12, "bold")).pack(anchor="w", pady=(12, 4))
+
+        # auto-update
+        auto_update_var = tk.BooleanVar(value=self.config.get("auto_update", True))
+        tk.Checkbutton(content, text="check for updates on startup", variable=auto_update_var, bg=CREAM, fg=INK, font=(B_FONT, 10), activebackground=CREAM,
+                       command=lambda: self._set_config("auto_update", auto_update_var.get())).pack(anchor="w", padx=4)
+
+        # persistent mode default
+        persist_var = tk.BooleanVar(value=self.config.get("persistent", False))
+        tk.Checkbutton(content, text="persistent mode by default", variable=persist_var, bg=CREAM, fg=INK, font=(B_FONT, 10), activebackground=CREAM,
+                       command=lambda: self._set_config("persistent", persist_var.get())).pack(anchor="w", padx=4)
+
+        # multi-script default
+        multi_var = tk.BooleanVar(value=self.config.get("multi_mode", True))
+        tk.Checkbutton(content, text="multi-script stacking by default", variable=multi_var, bg=CREAM, fg=INK, font=(B_FONT, 10), activebackground=CREAM,
+                       command=lambda: self._set_config("multi_mode", multi_var.get())).pack(anchor="w", padx=4)
+
+        # ── server ──
+        tk.Label(content, text="server", bg=CREAM, fg=PURPLE, font=(B_FONT, 12, "bold")).pack(anchor="w", pady=(12, 4))
+
+        tk.Label(content, text="port (requires restart):", bg=CREAM, fg=INK, font=(B_FONT, 10)).pack(anchor="w", padx=4)
+        port_var = tk.StringVar(value=str(self.config.get("port", 8742)))
+        port_entry = tk.Entry(content, textvariable=port_var, font=(B_FONT, 10), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE, width=8)
+        port_entry.pack(anchor="w", padx=4, pady=(2, 8), ipady=2)
+
+        # ── github oauth ──
+        tk.Label(content, text="github oauth", bg=CREAM, fg=PURPLE, font=(B_FONT, 12, "bold")).pack(anchor="w", pady=(12, 4))
+
+        tk.Label(content, text="client_id (for silly+ oauth):", bg=CREAM, fg=INK, font=(B_FONT, 10)).pack(anchor="w", padx=4)
+        cid_var = tk.StringVar(value=self.config.get("github_client_id", ""))
+        cid_entry = tk.Entry(content, textvariable=cid_var, font=(B_FONT, 10), bg=PANEL, fg=INK, bd=0, highlightthickness=2, highlightbackground="#e7dff7", highlightcolor=PURPLE)
+        cid_entry.pack(fill="x", padx=4, pady=(2, 8), ipady=2)
+
+        def save_settings():
+            self.config["dark_mode"] = dark_var.get()
+            self.config["port"] = int(port_var.get()) if port_var.get().isdigit() else 8742
+            self.config["github_client_id"] = cid_var.get().strip()
+            save_config(self.config)
+            self._apply_dark_mode()
+            self.status.configure(text="settings saved  ✦")
+            self.root.after(2400, lambda: self.status.configure(text=""))
+            win.destroy()
+
+        tk.Button(content, text="save settings", font=(B_FONT, 11, "bold"), bg=PURPLE, fg="white", bd=0, padx=20, pady=8,
+                  command=save_settings).pack(pady=(12, 8))
+
+        # apply dark mode on open
+        if self.config.get("dark_mode"):
+            self._apply_dark_mode()
+
+    def _set_config(self, key, val):
+        self.config[key] = val
+        save_config(self.config)
+
+    def _set_mascot_skin(self, skin):
+        skins = {
+            "blue": (SKY, SKY_DARK),
+            "pink": (PINK, PINK_DARK),
+            "green": (MINT, MINT_DARK),
+            "purple": (PURPLE, PURPLE_DARK),
+            "gold": (SUN, SUN_DARK),
+        }
+        if skin in skins:
+            fill, edge = skins[skin]
+            self.mascot.set_color(fill, edge)
+            self.config["mascot_skin"] = skin
+            save_config(self.config)
+
+    def _apply_mascot_skin(self):
+        skin = self.config.get("mascot_skin", "blue")
+        skins = {
+            "blue": (SKY, SKY_DARK),
+            "pink": (PINK, PINK_DARK),
+            "green": (MINT, MINT_DARK),
+            "purple": (PURPLE, PURPLE_DARK),
+            "gold": (SUN, SUN_DARK),
+        }
+        if skin in skins:
+            fill, edge = skins[skin]
+            self.mascot.set_color(fill, edge)
+
+    def _toggle_dark_mode(self, enabled):
+        self.config["dark_mode"] = enabled
+        save_config(self.config)
+        self._apply_dark_mode()
+
+    def _apply_dark_mode(self):
+        if self.config.get("dark_mode"):
+            # dark theme for app UI
+            dark_bg = "#1a1530"
+            dark_panel = "#252040"
+            dark_ink = "#e0ddf5"
+            self.root.configure(bg=dark_bg)
+            # update all frames (best effort)
+            for w in self.root.winfo_children():
+                try:
+                    w.configure(bg=dark_bg)
+                except Exception:
+                    pass
+        else:
+            self.root.configure(bg=CREAM)
+            for w in self.root.winfo_children():
+                try:
+                    w.configure(bg=CREAM)
+                except Exception:
+                    pass
+
     def add_site_rule(self):
         domain = simpledialog.askstring("site rule", "domain (e.g. example.com):", parent=self.root)
         if not domain:
